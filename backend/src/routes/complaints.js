@@ -32,30 +32,34 @@ function mapComplaint(r) {
   };
 }
 
-// Derive the caller profile from a valid Bearer token (if any).
+// Derive the caller profile from the authenticated request (req.user is set
+// by requireAuth), or from a Bearer token when present.
 async function currentProfile(req) {
-  const header = req.headers.authorization || "";
-  const token = header.replace("Bearer ", "");
-  if (!token) return null;
-  try {
-    const SECRET = () => process.env.JWT_SECRET || "dev_secret";
-    const user = jwt.verify(token, SECRET());
-    const [rows] = await pool.query(
-      "SELECT id, name, email, role, hostel_id, student_id FROM users WHERE id = ?",
-      [user.id]
-    );
-    const u = rows[0];
-    if (!u) return null;
-    return {
-      id: String(u.id),
-      role: u.role,
-      hostel_id: u.hostel_id != null ? Number(u.hostel_id) : null,
-      name: u.name,
-      student_id: u.student_id != null ? Number(u.student_id) : null,
-    };
-  } catch {
-    return null;
+  let id = req.user?.id;
+  if (!id) {
+    const header = req.headers.authorization || "";
+    const token = header.replace("Bearer ", "");
+    if (!token) return null;
+    try {
+      const SECRET = () => process.env.JWT_SECRET || "dev_secret";
+      id = jwt.verify(token, SECRET()).id;
+    } catch {
+      return null;
+    }
   }
+  const [rows] = await pool.query(
+    "SELECT id, name, email, role, hostel_id, student_id FROM users WHERE id = ?",
+    [id]
+  );
+  const u = rows[0];
+  if (!u) return null;
+  return {
+    id: String(u.id),
+    role: u.role,
+    hostel_id: u.hostel_id != null ? Number(u.hostel_id) : null,
+    name: u.name,
+    student_id: u.student_id != null ? Number(u.student_id) : null,
+  };
 }
 
 async function resolveWarden(hostelId) {

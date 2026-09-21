@@ -67,7 +67,8 @@ export function useAuth() {
 
     if (apiMode) {
       const token = getToken();
-      if (!token) {
+      const authDisabled = String(import.meta.env.VITE_AUTH_DISABLED) === "true";
+      if (!token && !authDisabled) {
         if (mounted) setLoading(false);
         return;
       }

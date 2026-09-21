@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 
 export type AuditLog = {
   id: number;
@@ -18,6 +19,15 @@ export async function logAudit(input: {
   details?: string;
 }): Promise<void> {
   try {
+    if (apiMode) {
+      await api.post("/audit-logs", {
+        action: input.action,
+        resource: input.resource ?? null,
+        resourceId: input.resourceId ?? null,
+        details: input.details ?? null,
+      });
+      return;
+    }
     const { data } = await supabase.auth.getUser();
     const user = data.user;
     if (!user) return;
@@ -43,6 +53,9 @@ export async function logAudit(input: {
 }
 
 export async function fetchAuditLogs(limit = 10): Promise<AuditLog[]> {
+  if (apiMode) {
+    return api.get<AuditLog[]>(`/audit-logs?limit=${limit}`);
+  }
   const { data, error } = await supabase
     .from("audit_logs")
     .select("*")
@@ -53,6 +66,9 @@ export async function fetchAuditLogs(limit = 10): Promise<AuditLog[]> {
 }
 
 export async function fetchAuditLogsAll(limit = 500): Promise<AuditLog[]> {
+  if (apiMode) {
+    return api.get<AuditLog[]>(`/audit-logs?limit=${limit}`);
+  }
   const { data, error } = await supabase
     .from("audit_logs")
     .select("*")

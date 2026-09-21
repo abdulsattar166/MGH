@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 
 export type PublicWarden = {
   id: string;
@@ -20,6 +21,21 @@ export function useWardens() {
     setLoading(true);
     setError("");
     try {
+      if (apiMode) {
+        const rows = await api.get<
+          Array<{
+            id: string;
+            name: string;
+            email: string | null;
+            phone: string | null;
+            hostelId: number | null;
+            avatarUrl: string | null;
+            position: string | null;
+          }>
+        >("/public/wardens");
+        setWardens(rows);
+        return;
+      }
       const { data, error: err } = await supabase
         .from("profiles")
         .select("id, name, email, phone, hostel_id, avatar_url, position")

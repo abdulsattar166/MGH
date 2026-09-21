@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { apiMode } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 
 type Mode = "signin" | "signup" | "forgot";
@@ -21,6 +22,14 @@ export default function ManageLogin() {
   const handleSetup = async () => {
     setSettingUp(true);
     setSetupStatus(null);
+    if (apiMode) {
+      setSetupStatus({
+        type: "success",
+        text: "Accounts are managed by the backend seed scripts (npm run seed-admin and seed-hostel-admins).",
+      });
+      setSettingUp(false);
+      return;
+    }
     try {
       const { data, error: invokeErr } = await supabase.functions.invoke("bootstrap-wardens", { body: {} });
       if (invokeErr || data?.error) {

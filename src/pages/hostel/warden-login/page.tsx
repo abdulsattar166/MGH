@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { hostels, hostelLocations } from "@/mocks/hostels";
 import { useAuth } from "@/hooks/useAuth";
 import { useWardens } from "@/hooks/useWardens";
+import { api, apiMode } from "@/lib/api";
+import type { AuthUser } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 
 export default function WardenLogin() {
@@ -35,6 +37,39 @@ export default function WardenLogin() {
       const err = await signIn(email.trim(), password);
       if (err) {
         setError(err.message);
+        return;
+      }
+
+      let me: AuthUser | null = null;
+      if (apiMode) {
+        try {
+          me = await api.get<AuthUser>("/auth/me");
+        } catch {
+          me = null;
+        }
+        if (!me) {
+          setError("Could not verify your account. Please try again.");
+          return;
+        }
+        if (me.isActive === false) {
+          await signOut();
+          setError("This account has been deactivated. Please contact the super admin.");
+          return;
+        }
+        const isStaff = ["warden", "admin", "superintendent"].includes(me.role);
+        if (!isStaff) {
+          await signOut();
+          setError("This account does not have management access.");
+          return;
+        }
+        if (me.role === "warden" && me.hostelId !== hostel.id) {
+          await signOut();
+          setError(
+            `This account is not the hostel admin of ${hostel.name}. Hostel admins can only access their own hostel.`
+          );
+          return;
+        }
+        navigate("/manage");
         return;
       }
 

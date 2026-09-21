@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 import type { Applicant, Booking, BookingStatus } from "@/lib/booking";
 
 type BookingRow = {
@@ -144,6 +145,9 @@ export type BookingStatusView = {
 export async function fetchBookingByReference(
   reference: string,
 ): Promise<BookingStatusView | null> {
+  if (apiMode) {
+    return api.get<BookingStatusView | null>(`/public/track/${encodeURIComponent(reference)}`);
+  }
   const { data, error } = await supabase.rpc("track_booking", { p_reference: reference });
   if (error) throw new Error(error.message);
   const rows = (data ?? []) as BookingStatusView[];

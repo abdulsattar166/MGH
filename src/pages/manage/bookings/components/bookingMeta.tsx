@@ -1,5 +1,6 @@
 import { type Booking, type BookingStatus } from "@/lib/booking";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const statusMeta: Record<
   BookingStatus,
   { label: string; cls: string; icon: string }
@@ -22,6 +23,7 @@ export function BookingStatusBadge({ status }: { status: BookingStatus }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString("en-GB", {
@@ -34,6 +36,7 @@ export function formatDate(iso: string): string {
   }
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function matchesQuery(b: Booking, query: string): boolean {
   if (!query) return true;
   const q = query.toLowerCase();

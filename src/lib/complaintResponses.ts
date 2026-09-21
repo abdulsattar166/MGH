@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 import { logAudit } from "@/lib/auditLogs";
 
 export type ComplaintResponse = {
@@ -13,6 +14,9 @@ export type ComplaintResponse = {
 export async function fetchComplaintResponses(
   complaintId: number,
 ): Promise<ComplaintResponse[]> {
+  if (apiMode) {
+    return api.get<ComplaintResponse[]>(`/complaints/${complaintId}/responses`);
+  }
   const { data, error } = await supabase
     .from("complaint_responses")
     .select("*")
@@ -26,6 +30,19 @@ export async function addComplaintResponse(
   complaintId: number,
   message: string,
 ): Promise<void> {
+  if (apiMode) {
+    const res = await api.post<{ ok?: boolean; error?: string }>(`/complaints/${complaintId}/responses`, {
+      message,
+    });
+    if (res?.error) throw new Error(res.error);
+    void logAudit({
+      action: "complaint.responded",
+      resource: "complaints",
+      resourceId: String(complaintId),
+      details: "Added a response to a complaint",
+    });
+    return;
+  }
   let authorId: string | null = null;
   let authorName: string | null = null;
   let authorRole: string | null = null;

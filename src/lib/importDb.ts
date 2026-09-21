@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 import type { StudentRaw, RoomRaw } from "@/lib/excel";
 
 export type HostelRef = { id: number; name: string; code: string | null };
@@ -6,6 +7,9 @@ export type BuildingRef = { id: number; hostel_id: number; name: string };
 export type BlockRef = { id: number; hostel_id: number; building_id: number; name: string };
 
 export async function fetchHostelRefs(): Promise<HostelRef[]> {
+  if (apiMode) {
+    return api.get<HostelRef[]>("/hostels");
+  }
   const { data, error } = await supabase
     .from("hostels")
     .select("id, name, code")
@@ -15,6 +19,25 @@ export async function fetchHostelRefs(): Promise<HostelRef[]> {
 }
 
 export async function fetchStructureRefs(): Promise<{ buildings: BuildingRef[]; blocks: BlockRef[] }> {
+  if (apiMode) {
+    const [buildings, blocks] = await Promise.all([
+      api.get<Array<Record<string, unknown>>>("/buildings"),
+      api.get<Array<Record<string, unknown>>>("/blocks"),
+    ]);
+    return {
+      buildings: buildings.map((b) => ({
+        id: Number(b.id),
+        hostel_id: Number(b.hostel_id),
+        name: String(b.name),
+      })),
+      blocks: blocks.map((b) => ({
+        id: Number(b.id),
+        hostel_id: Number(b.hostel_id),
+        building_id: Number(b.building_id),
+        name: String(b.name),
+      })),
+    };
+  }
   const { data: buildings, error: bErr } = await supabase
     .from("buildings")
     .select("id, hostel_id, name");
@@ -101,12 +124,18 @@ export async function validateStudents(
   raw: StudentRaw[],
   hostels: HostelRef[],
 ): Promise<StudentValidation[]> {
-  const { data: existing } = await supabase.from("students").select("cnic");
-  const existingCnics = new Set(
-    ((existing ?? []) as { cnic: string }[])
-      .map((r) => (r.cnic ?? "").trim().toLowerCase())
-      .filter(Boolean),
-  );
+  let existingCnics = new Set<string>();
+  if (apiMode) {
+    const cnics = await api.get<string[]>("/students/cnics");
+    existingCnics = new Set(cnics.map((c) => c.trim().toLowerCase()).filter(Boolean));
+  } else {
+    const { data: existing } = await supabase.from("students").select("cnic");
+    existingCnics = new Set(
+      ((existing ?? []) as { cnic: string }[])
+        .map((r) => (r.cnic ?? "").trim().toLowerCase())
+        .filter(Boolean),
+    );
+  }
   const seen = new Set<string>();
 
   return raw.map((r) => {
@@ -152,12 +181,20 @@ export async function validateRooms(
   buildings: BuildingRef[],
   blocks: BlockRef[],
 ): Promise<RoomValidation[]> {
-  const { data: existing } = await supabase.from("rooms").select("hostel_id, room_number");
-  const existingKeys = new Set(
-    ((existing ?? []) as { hostel_id: number; room_number: string }[]).map(
-      (r) => `${r.hostel_id}|${r.room_number.trim().toLowerCase()}`,
-    ),
-  );
+  let existingKeys = new Set<string>();
+  if (apiMode) {
+    const rows = await api.get<Array<{ hostel_id: number; room_number: string }>>("/rooms/keys");
+    existingKeys = new Set(
+      rows.map((r) => `${r.hostel_id}|${String(r.room_number).trim().toLowerCase()}`),
+    );
+  } else {
+    const { data: existing } = await supabase.from("rooms").select("hostel_id, room_number");
+    existingKeys = new Set(
+      ((existing ?? []) as { hostel_id: number; room_number: string }[]).map(
+        (r) => `${r.hostel_id}|${r.room_number.trim().toLowerCase()}`,
+      ),
+    );
+  }
   const seen = new Set<string>();
 
   return raw.map((r) => {
@@ -226,6 +263,9 @@ export async function bulkInsertStudents(
   rows: StudentValidation[],
 ): Promise<{ inserted: number }> {
   if (!rows.length) return { inserted: 0 };
+  if (apiMode) {
+    return api.post<{ inserted: number }>("/students/bulk", { payload: rows });
+  }
   const payload = rows.map((r) => ({
     name: r.name,
     father_name: r.fatherName || null,
@@ -251,6 +291,9 @@ export async function bulkInsertRooms(
   rows: RoomValidation[],
 ): Promise<{ inserted: number; bedsCreated: number }> {
   if (!rows.length) return { inserted: 0, bedsCreated: 0 };
+  if (apiMode) {
+    return api.post<{ inserted: number; bedsCreated: number }>("/rooms/bulk", { payload: rows });
+  }
   const payload = rows.map((r) => ({
     hostel_id: r.hostelId,
     room_number: r.roomNumber,

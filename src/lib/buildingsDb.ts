@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 
 export type Building = {
   id: number;
@@ -67,6 +68,34 @@ async function fetchRoomStats(): Promise<RoomStats> {
 }
 
 export async function fetchBuildings(hostelId?: number): Promise<Building[]> {
+  if (apiMode) {
+    const rows = await api.get<
+      Array<{
+        id: number;
+        hostel_id: number;
+        name: string;
+        description: string | null;
+        status: string;
+        blocks: number;
+        floors: number;
+        rooms: number;
+        beds: number;
+        occupied: number;
+      }>
+    >(`/buildings${hostelId ? `?hostelId=${hostelId}` : ""}`);
+    return rows.map((b) => ({
+      id: Number(b.id),
+      hostelId: Number(b.hostel_id),
+      name: b.name,
+      description: b.description,
+      status: b.status,
+      blocks: Number(b.blocks),
+      floors: Number(b.floors),
+      rooms: Number(b.rooms),
+      beds: Number(b.beds),
+      occupied: Number(b.occupied),
+    }));
+  }
   let q = supabase.from("buildings").select("*").order("name", { ascending: true });
   if (hostelId) q = q.eq("hostel_id", hostelId);
   const { data: buildings, error: bErr } = await q;
@@ -113,6 +142,32 @@ export async function fetchBuildings(hostelId?: number): Promise<Building[]> {
 }
 
 export async function fetchBlocks(buildingId?: number): Promise<Block[]> {
+  if (apiMode) {
+    const rows = await api.get<
+      Array<{
+        id: number;
+        hostel_id: number;
+        building_id: number;
+        name: string;
+        status: string;
+        floors: number;
+        rooms: number;
+        beds: number;
+        occupied: number;
+      }>
+    >(`/blocks${buildingId ? `?buildingId=${buildingId}` : ""}`);
+    return rows.map((b) => ({
+      id: Number(b.id),
+      hostelId: Number(b.hostel_id),
+      buildingId: Number(b.building_id),
+      name: b.name,
+      status: b.status,
+      floors: Number(b.floors),
+      rooms: Number(b.rooms),
+      beds: Number(b.beds),
+      occupied: Number(b.occupied),
+    }));
+  }
   let q = supabase.from("blocks").select("*").order("name", { ascending: true });
   if (buildingId) q = q.eq("building_id", buildingId);
   const { data: blocks, error: bErr } = await q;
@@ -152,6 +207,10 @@ export async function createBuilding(input: {
   description?: string | null;
   status: string;
 }): Promise<void> {
+  if (apiMode) {
+    await api.post("/buildings", { ...input });
+    return;
+  }
   const { error } = await supabase.from("buildings").insert({
     hostel_id: input.hostelId,
     name: input.name,
@@ -165,6 +224,10 @@ export async function updateBuilding(
   id: number,
   patch: { name?: string; description?: string | null; status?: string; hostelId?: number },
 ): Promise<void> {
+  if (apiMode) {
+    await api.put(`/buildings/${id}`, patch);
+    return;
+  }
   const payload: Record<string, unknown> = {};
   if (patch.name !== undefined) payload.name = patch.name;
   if (patch.description !== undefined) payload.description = patch.description;
@@ -176,6 +239,10 @@ export async function updateBuilding(
 }
 
 export async function deleteBuilding(id: number): Promise<void> {
+  if (apiMode) {
+    await api.del(`/buildings/${id}`);
+    return;
+  }
   const { error } = await supabase.from("buildings").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -186,6 +253,10 @@ export async function createBlock(input: {
   name: string;
   status: string;
 }): Promise<void> {
+  if (apiMode) {
+    await api.post("/blocks", { ...input });
+    return;
+  }
   const { error } = await supabase.from("blocks").insert({
     hostel_id: input.hostelId,
     building_id: input.buildingId,
@@ -199,6 +270,10 @@ export async function updateBlock(
   id: number,
   patch: { name?: string; status?: string; buildingId?: number; hostelId?: number },
 ): Promise<void> {
+  if (apiMode) {
+    await api.put(`/blocks/${id}`, patch);
+    return;
+  }
   const payload: Record<string, unknown> = {};
   if (patch.name !== undefined) payload.name = patch.name;
   if (patch.status !== undefined) payload.status = patch.status;
@@ -210,6 +285,10 @@ export async function updateBlock(
 }
 
 export async function deleteBlock(id: number): Promise<void> {
+  if (apiMode) {
+    await api.del(`/blocks/${id}`);
+    return;
+  }
   const { error } = await supabase.from("blocks").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 
 export type Hostel = {
   id: number;
@@ -44,6 +45,27 @@ const HOSTEL_COLS =
  * rooms, beds and room_allocations tables (never hardcoded).
  */
 export async function fetchHostelsFull(): Promise<Hostel[]> {
+  if (apiMode) {
+    const rows = await api.get<Array<Record<string, unknown>>>("/hostels/full");
+    return rows.map((r) => ({
+      id: Number(r.id),
+      name: String(r.name),
+      gender: String(r.gender ?? "boys"),
+      location: (r.location as string | null) ?? null,
+      address: (r.address as string | null) ?? null,
+      phone: (r.phone as string | null) ?? null,
+      email: (r.email as string | null) ?? null,
+      image: (r.image as string | null) ?? null,
+      rooms: Number(r.rooms ?? 0),
+      floors: Number(r.floors ?? 0),
+      beds: Number(r.beds ?? 0),
+      available: Number(r.available ?? 0),
+      facilities: Array.isArray(r.facilities) ? (r.facilities as string[]) : [],
+      code: (r.code as string | null) ?? null,
+      description: (r.description as string | null) ?? null,
+      status: String(r.status ?? "active"),
+    }));
+  }
   const { data: hostels, error: hErr } = await supabase
     .from("hostels")
     .select(HOSTEL_COLS)
@@ -119,6 +141,10 @@ export type HostelInput = {
 };
 
 export async function createHostel(input: HostelInput): Promise<void> {
+  if (apiMode) {
+    await api.post("/hostels", input);
+    return;
+  }
   const { error } = await supabase.from("hostels").insert({
     name: input.name,
     gender: input.gender,
@@ -138,6 +164,10 @@ export async function createHostel(input: HostelInput): Promise<void> {
 }
 
 export async function updateHostel(id: number, input: Partial<HostelInput>): Promise<void> {
+  if (apiMode) {
+    await api.put(`/hostels/${id}`, input);
+    return;
+  }
   const patch: Record<string, unknown> = {};
   if (input.name !== undefined) patch.name = input.name;
   if (input.gender !== undefined) patch.gender = input.gender;
@@ -156,6 +186,10 @@ export async function updateHostel(id: number, input: Partial<HostelInput>): Pro
 }
 
 export async function deleteHostel(id: number): Promise<void> {
+  if (apiMode) {
+    await api.del(`/hostels/${id}`);
+    return;
+  }
   const { error } = await supabase.from("hostels").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

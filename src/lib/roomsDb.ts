@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 import { getRoomImage } from "@/lib/roomImages";
 
 export type DbRoom = {
@@ -33,6 +34,9 @@ export type RoomsPayload = {
 };
 
 export async function fetchRoomsData(hostelId: number): Promise<RoomsPayload> {
+  if (apiMode) {
+    return api.get<RoomsPayload>(`/rooms/data?hostelId=${hostelId}`);
+  }
   const { data: rooms, error: rErr } = await supabase
     .from("rooms")
     .select("*")
@@ -71,6 +75,10 @@ export async function assignStudentToBed(
   roomNumber: string,
   bedNumber: number,
 ): Promise<void> {
+  if (apiMode) {
+    await api.post("/rooms/assign", { studentId, hostelId, roomNumber, bedNumber });
+    return;
+  }
   const { data: room, error: rErr } = await supabase
     .from("rooms")
     .select("id, capacity")
@@ -119,6 +127,10 @@ export async function assignStudentToBed(
 }
 
 export async function unassignStudent(studentId: number): Promise<void> {
+  if (apiMode) {
+    await api.post("/rooms/unassign", { studentId });
+    return;
+  }
   const { error: delErr } = await supabase
     .from("room_allocations")
     .delete()
@@ -133,6 +145,10 @@ export async function unassignStudent(studentId: number): Promise<void> {
 }
 
 export async function setBedMaintenance(bedId: number, isMaintenance: boolean): Promise<void> {
+  if (apiMode) {
+    await api.post(`/rooms/beds/${bedId}/maintenance`, { isMaintenance });
+    return;
+  }
   const { error } = await supabase
     .from("beds")
     .update({ is_maintenance: isMaintenance })
@@ -149,6 +165,10 @@ export type RoomInput = {
 };
 
 export async function addRoom(hostelId: number, input: RoomInput): Promise<void> {
+  if (apiMode) {
+    await api.post("/rooms/add", { hostelId, ...input });
+    return;
+  }
   const { data: room, error: rErr } = await supabase
     .from("rooms")
     .insert({
@@ -182,6 +202,10 @@ export async function updateRoom(
     status?: string;
   },
 ): Promise<void> {
+  if (apiMode) {
+    await api.put(`/rooms/${roomId}`, patch);
+    return;
+  }
   const { data: current, error: cErr } = await supabase
     .from("rooms")
     .select("capacity")
@@ -206,6 +230,10 @@ export async function updateRoom(
 }
 
 export async function deleteRoom(roomId: number): Promise<void> {
+  if (apiMode) {
+    await api.del(`/rooms/${roomId}`);
+    return;
+  }
   const { error } = await supabase.from("rooms").delete().eq("id", roomId);
   if (error) throw new Error(error.message);
 }
@@ -213,6 +241,10 @@ export async function deleteRoom(roomId: number): Promise<void> {
 export type HostelRef = { id: number; name: string };
 
 export async function fetchHostels(): Promise<HostelRef[]> {
+  if (apiMode) {
+    const rows = await api.get<Array<{ id: number; name: string; code?: string | null }>>("/hostels");
+    return rows.map((r) => ({ id: Number(r.id), name: r.name }));
+  }
   const { data, error } = await supabase
     .from("hostels")
     .select("id, name")
@@ -224,6 +256,17 @@ export async function fetchHostels(): Promise<HostelRef[]> {
 export type OccupancyByHostel = Record<number, { totalBeds: number; occupiedBeds: number }>;
 
 export async function fetchOccupancy(hostelIds?: number[]): Promise<OccupancyByHostel> {
+  if (apiMode) {
+    const ids = hostelIds?.length ? hostelIds.join(",") : "";
+    const rows = await api.get<Record<string, { totalBeds: number; occupiedBeds: number }>>(
+      `/rooms/occupancy${ids ? `?hostelIds=${encodeURIComponent(ids)}` : ""}`
+    );
+    const out: OccupancyByHostel = {};
+    for (const key of Object.keys(rows)) {
+      out[Number(key)] = { totalBeds: rows[key].totalBeds, occupiedBeds: rows[key].occupiedBeds };
+    }
+    return out;
+  }
   let roomQuery = supabase.from("rooms").select("id, hostel_id, capacity");
   if (hostelIds && hostelIds.length) roomQuery = roomQuery.in("hostel_id", hostelIds);
   const { data: rooms, error: rErr } = await roomQuery;
@@ -285,6 +328,9 @@ export type PublicAvailability = {
 export async function fetchPublicHostelAvailability(
   hostelId: number,
 ): Promise<PublicAvailability> {
+  if (apiMode) {
+    return api.get<PublicAvailability>(`/rooms/public-availability/${hostelId}`);
+  }
   const { data: rooms, error: rErr } = await supabase
     .from("rooms")
     .select("id, hostel_id, room_number, floor, room_type, capacity, status")
@@ -385,6 +431,12 @@ export type BookingRoom = {
 // Returns one entry per active room, with every bed resolved to
 // available / occupied / maintenance from live allocations.
 export async function fetchBookingRooms(hostelId: number): Promise<BookingRoom[]> {
+  if (apiMode) {
+    const rows = await api.get<
+      Array<{ label: string; block: string; floor: number; capacity: number; beds: BookingBed[]; availableCount: number }>
+    >(`/rooms/booking-rooms?hostelId=${hostelId}`);
+    return rows.map((r) => ({ ...r, image: getRoomImage(`${hostelId}-${r.label}`) }));
+  }
   const { data: rooms, error: rErr } = await supabase
     .from("rooms")
     .select("id, room_number, floor, capacity")

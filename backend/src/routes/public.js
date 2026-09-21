@@ -89,6 +89,56 @@ router.get("/availability/:hostelId", async (req, res) => {
   }
 });
 
+// GET /api/public/wardens — public warden directory (no auth required)
+router.get("/wardens", async (_req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, name, email, phone, avatar_url, position, hostel_id
+       FROM users
+       WHERE role = 'warden' AND is_active = 1
+       ORDER BY name ASC`
+    );
+    res.json(
+      rows.map((r) => ({
+        id: String(r.id),
+        name: r.name,
+        email: r.email,
+        phone: r.phone,
+        hostelId: r.hostel_id != null ? Number(r.hostel_id) : null,
+        avatarUrl: r.avatar_url,
+        position: r.position ?? "Warden",
+      }))
+    );
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/public/track/:reference — safe (anon) booking status lookup
+router.get("/track/:reference", async (req, res) => {
+  try {
+    const reference = String(req.params.reference ?? "").trim().toUpperCase();
+    if (!reference) return res.status(400).json({ error: "Booking reference is required." });
+    const [rows] = await pool.query(
+      "SELECT id, hostel_name, room_label, floor, bed_number, status, created_at FROM bookings WHERE id = ?",
+      [reference]
+    );
+    if (!rows.length) return res.json(null);
+    const r = rows[0];
+    res.json({
+      reference: r.id,
+      hostel_name: r.hostel_name,
+      room_number: r.room_label,
+      floor: Number(r.floor),
+      bed_number: Number(r.bed_number),
+      status: r.status,
+      created_at: r.created_at,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/public/bookings
 router.post("/bookings", async (req, res) => {
   try {

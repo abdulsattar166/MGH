@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { api, apiMode } from "@/lib/api";
 
 export type Notice = {
   id: number;
@@ -21,6 +22,9 @@ export function isNoticeExpired(notice: Pick<Notice, "expires_at">): boolean {
 }
 
 export async function fetchNotices(hostelId?: number | null): Promise<Notice[]> {
+  if (apiMode) {
+    return api.get<Notice[]>(`/notices${hostelId ? `?hostelId=${hostelId}` : ""}`);
+  }
   let query = supabase
     .from("notices")
     .select(NOTICE_COLS)
@@ -40,6 +44,17 @@ export async function createNotice(payload: {
   isPinned?: boolean;
   expiresAt?: string | null;
 }): Promise<Notice | null> {
+  if (apiMode) {
+    const data = await api.post<Notice | undefined>("/notices", {
+      hostelId: payload.hostelId,
+      title: payload.title,
+      body: payload.body,
+      authorName: payload.authorName ?? null,
+      isPinned: payload.isPinned ?? false,
+      expiresAt: payload.expiresAt || null,
+    });
+    return data ?? null;
+  }
   const { data, error } = await supabase
     .from("notices")
     .insert({
@@ -60,6 +75,10 @@ export async function updateNotice(
   id: number,
   patch: { title?: string; body?: string; isPinned?: boolean; expiresAt?: string | null }
 ): Promise<Notice | null> {
+  if (apiMode) {
+    const data = await api.put<Notice | undefined>(`/notices/${id}`, patch);
+    return data ?? null;
+  }
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (patch.title !== undefined) updates.title = patch.title;
   if (patch.body !== undefined) updates.body = patch.body;
@@ -77,6 +96,10 @@ export async function updateNotice(
 }
 
 export async function deleteNotice(id: number): Promise<void> {
+  if (apiMode) {
+    await api.del(`/notices/${id}`);
+    return;
+  }
   const { error } = await supabase.from("notices").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

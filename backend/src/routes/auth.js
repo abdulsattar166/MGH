@@ -12,6 +12,10 @@ function toUser(row) {
     name: row.name,
     email: row.email,
     hostelId: row.hostel_id ?? null,
+    avatarUrl: row.avatar_url ?? null,
+    position: row.position ?? null,
+    isActive: row.is_active !== 0,
+    studentId: row.student_id != null ? Number(row.student_id) : null,
   };
 }
 
@@ -28,6 +32,9 @@ router.post("/login", async (req, res) => {
     const user = rows[0];
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
       return res.status(400).json({ error: "Invalid email or password." });
+    }
+    if (!user.is_active) {
+      return res.status(403).json({ error: "This account has been deactivated." });
     }
 
     res.json({ token: signToken(user), user: toUser(user) });

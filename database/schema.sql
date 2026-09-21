@@ -21,7 +21,13 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255)     NOT NULL,
   role          ENUM('admin','warden') NOT NULL DEFAULT 'warden',
   hostel_id     INT UNSIGNED     NULL,
+  phone         VARCHAR(50)      NULL,
+  avatar_url    VARCHAR(500)     NULL,
+  position      VARCHAR(100)     NULL,
+  is_active     TINYINT(1)       NOT NULL DEFAULT 1,
+  student_id    INT UNSIGNED     NULL,
   created_at    TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP        NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email),
   KEY idx_users_hostel (hostel_id)
@@ -35,8 +41,20 @@ CREATE TABLE IF NOT EXISTS hostels (
   name     VARCHAR(255)  NOT NULL,
   gender   VARCHAR(20)   NOT NULL DEFAULT 'boys',
   location VARCHAR(255)  NOT NULL DEFAULT '',
+  address  VARCHAR(500)  NULL,
+  phone    VARCHAR(50)   NULL,
+  email    VARCHAR(255)  NULL,
+  image_url VARCHAR(500) NULL,
+  facilities JSON        NULL,
+  code     VARCHAR(50)   NULL,
+  description TEXT       NULL,
+  status   VARCHAR(20)   NOT NULL DEFAULT 'active',
+  rooms    INT UNSIGNED  NOT NULL DEFAULT 0,
+  beds     INT UNSIGNED  NOT NULL DEFAULT 0,
   created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id)
+  updated_at TIMESTAMP   NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_hostels_code (code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
@@ -169,8 +187,172 @@ SELECT
   u.id,
   u.name,
   u.email,
+  u.phone,
+  u.position,
+  u.is_active,
   u.hostel_id,
   h.name AS hostel_name
 FROM users u
 LEFT JOIN hostels h ON h.id = u.hostel_id
 WHERE u.role = 'warden';
+
+-- ---------------------------------------------------------------------------
+-- complaints — complaint & maintenance requests
+--   warden_id holds the stringified users.id of the responsible warden so the
+--   frontend (which uses UUID-style string ids) keeps working unchanged.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS complaints (
+  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  code         VARCHAR(30)  NOT NULL,
+  student_id   INT UNSIGNED NULL,
+  student_name VARCHAR(255) NULL,
+  student_code VARCHAR(100) NULL,
+  hostel_id    INT UNSIGNED NULL,
+  warden_id    VARCHAR(64)  NULL,
+  room         VARCHAR(50)  NULL,
+  category     VARCHAR(50)  NOT NULL DEFAULT 'Other',
+  description  TEXT         NOT NULL,
+  priority     VARCHAR(20)  NOT NULL DEFAULT 'Normal',
+  status       VARCHAR(30)  NOT NULL DEFAULT 'Pending',
+  remarks      TEXT         NULL,
+  created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP    NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_complaints_code (code),
+  KEY idx_complaints_hostel (hostel_id),
+  KEY idx_complaints_student (student_id),
+  KEY idx_complaints_status (status),
+  KEY idx_complaints_warden (warden_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- complaint_responses — reply thread under a complaint
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS complaint_responses (
+  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  complaint_id INT UNSIGNED NOT NULL,
+  author_id    VARCHAR(64)  NULL,
+  author_name  VARCHAR(255) NULL,
+  author_role  VARCHAR(30)  NULL,
+  message      TEXT         NOT NULL,
+  created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_complaint_responses_complaint (complaint_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- buildings — physical building blocks within a hostel
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS buildings (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  hostel_id   INT UNSIGNED NOT NULL,
+  name        VARCHAR(255) NOT NULL,
+  description TEXT         NULL,
+  status      VARCHAR(20)  NOT NULL DEFAULT 'active',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP    NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_buildings_hostel (hostel_id),
+  UNIQUE KEY uq_buildings (hostel_id, name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- blocks — blocks within a building
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS blocks (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  hostel_id   INT UNSIGNED NOT NULL,
+  building_id INT UNSIGNED NOT NULL,
+  name        VARCHAR(255) NOT NULL,
+  status      VARCHAR(20)  NOT NULL DEFAULT 'active',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP    NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_blocks_hostel (hostel_id),
+  KEY idx_blocks_building (building_id),
+  UNIQUE KEY uq_blocks (building_id, name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- hostel_rooms — per-hostel rooms (the public catalog `rooms` table above
+-- stays as a shared structure; this is the real per-hostel inventory).
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hostel_rooms (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  hostel_id   INT UNSIGNED NOT NULL,
+  building_id INT UNSIGNED NULL,
+  block_id    INT UNSIGNED NULL,
+  room_number VARCHAR(50)  NOT NULL,
+  floor       INT          NOT NULL DEFAULT 1,
+  room_type   VARCHAR(50)  NOT NULL DEFAULT '',
+  capacity    INT          NOT NULL DEFAULT 3,
+  status      VARCHAR(20)  NOT NULL DEFAULT 'active',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP    NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_hostel_rooms (hostel_id, room_number),
+  KEY idx_hostel_rooms_floor (floor),
+  KEY idx_hostel_rooms_building (building_id),
+  KEY idx_hostel_rooms_block (block_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- hostel_beds — beds inside a hostel room
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hostel_beds (
+  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  room_id        INT UNSIGNED NOT NULL,
+  bed_number     INT          NOT NULL,
+  is_maintenance TINYINT(1)   NOT NULL DEFAULT 0,
+  created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_hostel_beds (room_id, bed_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- room_allocations — who sleeps in which bed (mirrors Supabase)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS room_allocations (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  student_id INT UNSIGNED NOT NULL,
+  room_id    INT UNSIGNED NOT NULL,
+  bed_id     INT UNSIGNED NOT NULL,
+  created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_alloc_student (student_id),
+  UNIQUE KEY uq_alloc_bed (bed_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- notices — notices board per hostel
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notices (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  hostel_id   INT UNSIGNED NOT NULL,
+  title       VARCHAR(255) NOT NULL,
+  body        TEXT         NOT NULL,
+  author_name VARCHAR(255) NULL,
+  is_pinned   TINYINT(1)   NOT NULL DEFAULT 0,
+  expires_at  VARCHAR(30)  NULL,
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP    NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_notices_hostel (hostel_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- audit_logs — activity trail (opt-in; never breaks the main flow)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id     VARCHAR(64)  NULL,
+  user_name   VARCHAR(255) NULL,
+  user_role   VARCHAR(30)  NULL,
+  action      VARCHAR(120) NOT NULL,
+  resource    VARCHAR(50)  NULL,
+  resource_id VARCHAR(64)  NULL,
+  details     TEXT         NULL,
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_audit_logs_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -21,6 +21,50 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/students/cnics — existing CNICs (used by the import validator)
+router.get("/cnics", async (_req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT cnic FROM students");
+    res.json(rows.map((r) => String(r.cnic ?? "").trim().toLowerCase()).filter(Boolean));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/students/bulk — bulk import of validated students
+router.post("/bulk", async (req, res) => {
+  try {
+    const rows = Array.isArray(req.body.payload) ? req.body.payload : [];
+    if (!rows.length) return res.json({ inserted: 0 });
+    const values = rows.map((r) => [
+      r.name || "",
+      r.fatherName || "",
+      r.cnic || "",
+      r.phone || "",
+      r.hostelId || 1,
+      r.room || "",
+      r.bed ?? 1,
+      r.roomType || "",
+      r.university || "",
+      r.program || "",
+      r.guardianPhone || "",
+      r.joinDate ?? "",
+      r.monthlyFee ?? 0,
+      r.status || "Active",
+    ]);
+    await pool.query(
+      `INSERT INTO students
+         (name, father_name, cnic, phone, hostel_id, room, bed, room_type,
+          university, program, guardian_phone, join_date, monthly_fee, status)
+       VALUES ?`,
+      [values]
+    );
+    res.json({ inserted: values.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/students
 router.post("/", async (req, res) => {
   try {

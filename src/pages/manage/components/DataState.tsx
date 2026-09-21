@@ -2,7 +2,7 @@ type Props = {
   loading: boolean;
   error: string;
   onRetry?: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 export default function DataState({ loading, error, onRetry, children }: Props) {

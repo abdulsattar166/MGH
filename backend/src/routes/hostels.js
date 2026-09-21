@@ -3,13 +3,14 @@ import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 // Hostels — REST mirror of the Supabase `hostels` table + derived figures.
+// The read endpoints are public (the home page lists hostels anonymously);
+// writes require an authenticated staff account.
 //   GET    /api/hostels        -> [{ id, name, code }]            (refs)
 //   GET    /api/hostels/full   -> Hostel[]                        (derived stats)
 //   POST   /api/hostels        -> create hostel
 //   PUT    /api/hostels/:id    -> update hostel
 //   DELETE /api/hostels/:id    -> delete hostel
 const router = Router();
-router.use(requireAuth);
 
 function parseFacilities(value) {
   if (value === null || value === undefined || value === "") return [];
@@ -100,7 +101,7 @@ router.get("/full", async (_req, res) => {
 });
 
 // POST / — create
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
     const name = String(req.body.name || "").trim();
     if (!name) return res.status(400).json({ error: "Hostel name is required." });
@@ -131,7 +132,7 @@ router.post("/", async (req, res) => {
 });
 
 // PUT /:id — update
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAuth, async (req, res) => {
   try {
     const id = Number(req.params.id);
     const fields = [];
@@ -160,7 +161,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // DELETE /:id
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, async (req, res) => {
   try {
     await pool.query("DELETE FROM hostels WHERE id = ?", [Number(req.params.id)]);
     res.json({ ok: true });

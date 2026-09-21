@@ -3,12 +3,13 @@ import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
 
 // Notices — REST mirror of the Supabase `notices` table.
+// The notice board is read anonymously on the public hostel pages; writes
+// require an authenticated staff account.
 //   GET    /api/notices?hostelId=N  -> Notice[]
 //   POST   /api/notices             -> create
 //   PUT    /api/notices/:id         -> update
 //   DELETE /api/notices/:id         -> delete
 const router = Router();
-router.use(requireAuth);
 
 function mapNotice(r) {
   return {
@@ -39,7 +40,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   try {
     const b = req.body;
     if (!b.hostelId || !b.title || !b.body) {
@@ -64,7 +65,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAuth, async (req, res) => {
   try {
     const id = Number(req.params.id);
     const b = req.body;
@@ -82,7 +83,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, async (req, res) => {
   try {
     await pool.query("DELETE FROM notices WHERE id = ?", [Number(req.params.id)]);
     res.json({ ok: true });

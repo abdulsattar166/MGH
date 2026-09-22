@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { api, apiMode } from "@/lib/api";
+import { getHostelImage } from "@/lib/hostelImages";
 
 export type Hostel = {
   id: number;
@@ -55,7 +56,7 @@ export async function fetchHostelsFull(): Promise<Hostel[]> {
       address: (r.address as string | null) ?? null,
       phone: (r.phone as string | null) ?? null,
       email: (r.email as string | null) ?? null,
-      image: (r.image as string | null) ?? null,
+      image: getHostelImage(Number(r.id), (r.image as string | null) ?? null),
       rooms: Number(r.rooms ?? 0),
       floors: Number(r.floors ?? 0),
       beds: Number(r.beds ?? 0),
@@ -113,7 +114,7 @@ export async function fetchHostelsFull(): Promise<Hostel[]> {
       address: h.address,
       phone: h.phone,
       email: h.email,
-      image: h.image_url,
+      image: getHostelImage(Number(h.id), h.image_url),
       rooms: a?.rooms ?? 0,
       floors: a?.floors.size ?? 0,
       beds,

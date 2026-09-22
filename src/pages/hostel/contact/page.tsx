@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { hostels, hostelLocations } from "@/mocks/hostels";
+import { useHostelFull } from "@/hooks/useHostelFull";
+import { getHostelLocation } from "@/lib/hostelContent";
 import { useWardens } from "@/hooks/useWardens";
 import WardenCard from "@/pages/hostel/components/WardenCard";
 
@@ -8,14 +9,35 @@ const FORM_URL = "https://readdy.ai/api/form/da6o2muij9sffln41iug";
 
 export default function HostelContact() {
   const { id } = useParams();
-  const hostel = hostels.find((h) => h.id === Number(id));
-  const loc = hostelLocations.find((l) => l.id === Number(id));
+  const { hostel, loading } = useHostelFull(id ? Number(id) : null);
+  const loc = getHostelLocation(id ? Number(id) : 0, hostel ?? undefined);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const { forHostel } = useWardens();
   const wardenForHostel = forHostel(hostel ? hostel.id : null);
 
-  if (!hostel || !loc) return null;
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-foreground-500">
+        <i className="ri-loader-4-line animate-spin text-3xl"></i>
+      </div>
+    );
+  }
+
+  if (!hostel) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 text-center">
+        <i className="ri-error-warning-line text-5xl text-accent-500"></i>
+        <h1 className="font-heading text-2xl font-bold text-foreground-950 mt-4">Hostel not found</h1>
+        <Link
+          to="/hostels"
+          className="mt-6 px-6 py-3 rounded-md bg-primary-500 text-background-50 font-semibold cursor-pointer"
+        >
+          View All Hostels
+        </Link>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -19,36 +19,42 @@ INSERT INTO hostels (id, name, gender, location) VALUES
 UPDATE hostels SET
   code = 'JH-1',  status = 'active', rooms = 50, beds = 165,
   phone = '051-1111111', email = 'jinnah@mubarakhostels.pk',
+  image_url = 'https://readdy.ai/api/search-image?query=Modern%20five%20storey%20student%20hostel%20building%20exterior%20with%20warm%20cream%20facade%20and%20sage%20green%20accent%20details%2C%20clean%20minimal%20residential%20architecture%2C%20manicured%20landscaped%20entrance%20with%20lush%20green%20plants%20and%20trees%2C%20warm%20golden%20hour%20sunlight%2C%20clear%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Power Backup','24/7 Security','Study Hall'),
   description = 'Our flagship boys hostel on 6th Road, Rawalpindi with 50 rooms across 5 floors.'
 WHERE id = 1;
 UPDATE hostels SET
   code = 'SH-2',  status = 'active', rooms = 50, beds = 165,
   phone = '051-2222222', email = 'sama@mubarakhostels.pk',
+  image_url = 'https://readdy.ai/api/search-image?query=Contemporary%20student%20hostel%20building%20exterior%20with%20warm%20beige%20facade%20and%20modern%20windows%2C%20four%20storey%20clean%20residential%20architecture%2C%20tidy%20landscaped%20front%20garden%20with%20green%20shrubs%20and%20pathway%2C%20soft%20warm%20morning%20light%2C%20bright%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Gym','Garden'),
   description = 'Boys hostel focused on comfort and community living near educational institutions.'
 WHERE id = 2;
 UPDATE hostels SET
   code = 'AQ-3',  status = 'active', rooms = 50, beds = 165,
   phone = '051-3333333', email = 'abdulqadir@mubarakhostels.pk',
+  image_url = 'https://readdy.ai/api/search-image?query=Elegant%20student%20hostel%20residence%20exterior%20with%20warm%20sandstone%20facade%20and%20balcony%20railings%2C%20modern%20clean%20architecture%20with%20large%20windows%2C%20neat%20entrance%20with%20potted%20plants%20and%20green%20landscaping%2C%20warm%20late%20afternoon%20golden%20light%2C%20clear%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Library'),
   description = 'A well-managed boys hostel, minutes from the main university campuses.'
 WHERE id = 3;
 UPDATE hostels SET
   code = 'MH-4',  status = 'active', rooms = 50, beds = 165,
   phone = '042-4444444', email = 'dha@mubarakhostels.pk',
+  image_url = 'https://readdy.ai/api/search-image?query=Upscale%20modern%20girls%20student%20hostel%20building%20in%20a%20gated%20community%2C%20warm%20cream%20exterior%20with%20elegant%20design%20details%2C%20landscaped%20gardens%20with%20manicured%20hedges%20and%20flowers%2C%20soft%20warm%20evening%20light%2C%20premium%20architectural%20photography%2C%20luxurious%20yet%20welcoming%20student%20residence&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Power Backup','24/7 Security'),
   description = 'Girls hostel in DHA Phase 5, Lahore with a safe and secure environment.'
 WHERE id = 4;
 UPDATE hostels SET
   code = 'MH-5',  status = 'active', rooms = 50, beds = 165,
   phone = '042-5555555', email = 'wapda@mubarakhostels.pk',
+  image_url = 'https://readdy.ai/api/search-image?query=Comfortable%20modern%20student%20hostel%20building%20with%20warm%20beige%20exterior%20and%20neat%20balconies%2C%20family%20friendly%20residential%20neighborhood%20setting%20with%20green%20trees%20and%20clean%20streets%2C%20soft%20warm%20daylight%2C%20clear%20sky%2C%20professional%20architectural%20photography%2C%20safe%20premium%20student%20accommodation&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Transport'),
   description = 'Girls hostel in Wapda Town, Lahore close to universities and transport services.'
 WHERE id = 5;
 UPDATE hostels SET
   code = 'MH-6',  status = 'active', rooms = 50, beds = 165,
   phone = '042-6666666', email = 'bahria@mubarakhostels.pk',
+  image_url = 'https://readdy.ai/api/search-image?query=Modern%20gated%20student%20hostel%20building%20in%20a%20well%20planned%20community%2C%20warm%20cream%20facade%20with%20contemporary%20architectural%20lines%2C%20wide%20clean%20roads%20and%20green%20parks%20nearby%2C%20bright%20warm%20sunlight%2C%20blue%20sky%2C%20professional%20architectural%20photography%2C%20premium%20secure%20student%20living&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Gym','24/7 Security'),
   description = 'Girls hostel in Bahria Town, Lahore with modern amenities.'
 WHERE id = 6;

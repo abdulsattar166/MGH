@@ -3,7 +3,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import SiteNavbar from "@/components/feature/SiteNavbar";
 import SiteFooter from "@/components/feature/SiteFooter";
 import WhatsAppFab from "@/pages/home/components/WhatsAppFab";
-import { hostels } from "@/mocks/hostels";
+import { useHostelsFull } from "@/hooks/useHostelsFull";
+import type { Hostel } from "@/lib/hostelsDb";
 import {
   type Applicant,
   type Booking,
@@ -23,6 +24,8 @@ const steps = ["Hostel", "Room", "Bed", "Details", "Documents", "Confirm"];
 export default function Booking() {
   const [searchParams] = useSearchParams();
   const preHostel = Number(searchParams.get("hostel")) || null;
+
+  const { hostels, loading: hostelsLoading } = useHostelsFull();
 
   const [hostelId, setHostelId] = useState<number | null>(preHostel);
   const [room, setRoom] = useState<RoomBeds | null>(null);
@@ -288,10 +291,19 @@ export default function Booking() {
               )}
 
               {/* Steps */}
-              {step === 0 && <StepHostel selectedId={hostelId} onSelect={pickHostel} />}
+              {step === 0 &&
+                (hostelsLoading ? (
+                  <div className="flex items-center justify-center gap-2 py-20 text-foreground-500">
+                    <i className="ri-loader-4-line animate-spin text-2xl"></i>
+                    <span className="text-sm">Loading hostels…</span>
+                  </div>
+                ) : (
+                  <StepHostel hostels={hostels} selectedId={hostelId} onSelect={pickHostel} />
+                ))}
 
               {step === 1 && hostelId && (
                 <StepRoom
+                  hostels={hostels}
                   hostelId={hostelId}
                   selectedRoom={room?.label ?? null}
                   onSelect={pickRoom}
@@ -301,6 +313,7 @@ export default function Booking() {
 
               {step === 2 && hostelId && room && (
                 <StepBed
+                  hostels={hostels}
                   hostelId={hostelId}
                   roomLabel={room.label}
                   selectedBed={bedNumber}
@@ -329,6 +342,7 @@ export default function Booking() {
 
               {step === 5 && hostelId && room && bedNumber && (
                 <StepReview
+                  hostels={hostels}
                   hostelId={hostelId}
                   roomLabel={room.label}
                   bedNumber={bedNumber}

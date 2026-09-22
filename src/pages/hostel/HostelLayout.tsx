@@ -1,12 +1,23 @@
 import { useParams, Outlet, Link } from "react-router-dom";
-import { hostels } from "@/mocks/hostels";
+import { useHostelFull } from "@/hooks/useHostelFull";
 import HostelNavbar from "./components/HostelNavbar";
 import HostelFooter from "./components/HostelFooter";
 import WhatsAppFab from "@/pages/home/components/WhatsAppFab";
 
 export default function HostelLayout() {
   const { id } = useParams();
-  const hostel = hostels.find((h) => h.id === Number(id));
+  const { hostel, loading } = useHostelFull(id ? Number(id) : null);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background-50">
+        <div className="flex flex-col items-center gap-3 text-foreground-600">
+          <i className="ri-loader-4-line animate-spin text-3xl"></i>
+          <span className="text-sm">Loading…</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!hostel) {
     return (
@@ -25,7 +36,7 @@ export default function HostelLayout() {
     );
   }
 
-  const msg = `Hello, I am interested in ${hostel.name} at ${hostel.location}. Please share room availability and admission details.`;
+  const msg = `Hello, I am interested in ${hostel.name} at ${hostel.location ?? ""}. Please share room availability and admission details.`;
 
   return (
     <div className="min-h-screen bg-background-50">

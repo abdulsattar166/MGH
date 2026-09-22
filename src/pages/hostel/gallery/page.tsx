@@ -1,14 +1,36 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { hostels, hostelDetails } from "@/mocks/hostels";
+import { useHostelFull } from "@/hooks/useHostelFull";
+import { getHostelDetail } from "@/lib/hostelContent";
 
 export default function HostelGallery() {
   const { id } = useParams();
-  const hostel = hostels.find((h) => h.id === Number(id));
-  const detail = hostelDetails.find((d) => d.id === Number(id));
+  const { hostel, loading } = useHostelFull(id ? Number(id) : null);
+  const detail = getHostelDetail(id ? Number(id) : 0, hostel ?? undefined);
   const [lightbox, setLightbox] = useState<number | null>(null);
 
-  if (!hostel || !detail) return null;
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-foreground-500">
+        <i className="ri-loader-4-line animate-spin text-3xl"></i>
+      </div>
+    );
+  }
+
+  if (!hostel) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 text-center">
+        <i className="ri-error-warning-line text-5xl text-accent-500"></i>
+        <h1 className="font-heading text-2xl font-bold text-foreground-950 mt-4">Hostel not found</h1>
+        <Link
+          to="/hostels"
+          className="mt-6 px-6 py-3 rounded-md bg-primary-500 text-background-50 font-semibold cursor-pointer"
+        >
+          View All Hostels
+        </Link>
+      </div>
+    );
+  }
 
   const categories = [
     "Building & Exterior",

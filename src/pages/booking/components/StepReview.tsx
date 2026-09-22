@@ -1,8 +1,9 @@
-import { hostels } from "@/mocks/hostels";
 import { type Applicant } from "@/lib/booking";
 import { useHostelRooms } from "@/hooks/useHostelRooms";
+import type { Hostel } from "@/lib/hostelsDb";
 
 type Props = {
+  hostels: Hostel[];
   hostelId: number;
   roomLabel: string;
   bedNumber: number;
@@ -25,6 +26,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 export default function StepReview({
+  hostels,
   hostelId,
   roomLabel,
   bedNumber,
@@ -37,6 +39,8 @@ export default function StepReview({
   const hostel = hostels.find((h) => h.id === hostelId);
   const rooms = useHostelRooms(hostelId);
   const room = rooms.find((r) => r.label === roomLabel);
+
+  const hostelName = hostel?.name ?? `Hostel #${hostelId}`;
 
   return (
     <div>
@@ -52,7 +56,7 @@ export default function StepReview({
         {/* Selection */}
         <div className="bg-background-50 border border-background-200 rounded-2xl p-6">
           <h3 className="font-heading text-base font-bold text-foreground-950 mb-2">Selection</h3>
-          <Row label="Selected Hostel" value={hostel?.name ?? ""} />
+          <Row label="Selected Hostel" value={hostelName} />
           <Row label="Selected Room" value={`${roomLabel} · Floor ${room?.floor} · Block ${room?.block}`} />
           <Row label="Selected Bed" value={`Bed ${bedNumber}`} />
           <Row label="Joining Date" value={form.joiningDate} />

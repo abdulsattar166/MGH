@@ -1,15 +1,16 @@
-import { hostels } from "@/mocks/hostels";
 import { isRoomFull, type RoomBeds } from "@/lib/booking";
 import { useHostelRooms } from "@/hooks/useHostelRooms";
+import type { Hostel } from "@/lib/hostelsDb";
 
 type Props = {
+  hostels: Hostel[];
   hostelId: number;
   selectedRoom: string | null;
   onSelect: (room: RoomBeds) => void;
   onBack: () => void;
 };
 
-export default function StepRoom({ hostelId, selectedRoom, onSelect, onBack }: Props) {
+export default function StepRoom({ hostels, hostelId, selectedRoom, onSelect, onBack }: Props) {
   const hostel = hostels.find((h) => h.id === hostelId);
   const rooms = useHostelRooms(hostelId);
 
@@ -24,7 +25,7 @@ export default function StepRoom({ hostelId, selectedRoom, onSelect, onBack }: P
       </button>
 
       <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground-950">
-        Available rooms at {hostel?.name}
+        Available rooms at {hostel?.name ?? `Hostel #${hostelId}`}
       </h2>
       <p className="mt-2 text-sm text-foreground-600">
         Only rooms with at least one free bed are shown. Full rooms are disabled.

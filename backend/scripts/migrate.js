@@ -69,6 +69,22 @@ async function main() {
   await addColumn(conn, "hostels", "beds", "INT UNSIGNED NOT NULL DEFAULT 0");
   await addColumn(conn, "hostels", "updated_at", "TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP");
 
+  console.log("Backfilling hostel cover images…");
+  const HOSTEL_IMAGES = [
+    [1, "https://readdy.ai/api/search-image?query=Modern%20five%20storey%20student%20hostel%20building%20exterior%20with%20warm%20cream%20facade%20and%20sage%20green%20accent%20details%2C%20clean%20minimal%20residential%20architecture%2C%20manicured%20landscaped%20entrance%20with%20lush%20green%20plants%20and%20trees%2C%20warm%20golden%20hour%20sunlight%2C%20clear%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&seq=hostel-01-jinnah&orientation=landscape"],
+    [2, "https://readdy.ai/api/search-image?query=Contemporary%20student%20hostel%20building%20exterior%20with%20warm%20beige%20facade%20and%20modern%20windows%2C%20four%20storey%20clean%20residential%20architecture%2C%20tidy%20landscaped%20front%20garden%20with%20green%20shrubs%20and%20pathway%2C%20soft%20warm%20morning%20light%2C%20bright%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&seq=hostel-02-sama&orientation=landscape"],
+    [3, "https://readdy.ai/api/search-image?query=Elegant%20student%20hostel%20residence%20exterior%20with%20warm%20sandstone%20facade%20and%20balcony%20railings%2C%20modern%20clean%20architecture%20with%20large%20windows%2C%20neat%20entrance%20with%20potted%20plants%20and%20green%20landscaping%2C%20warm%20late%20afternoon%20golden%20light%2C%20clear%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&seq=hostel-03-abdulqadir&orientation=landscape"],
+    [4, "https://readdy.ai/api/search-image?query=Upscale%20modern%20girls%20student%20hostel%20building%20in%20a%20gated%20community%2C%20warm%20cream%20exterior%20with%20elegant%20design%20details%2C%20landscaped%20gardens%20with%20manicured%20hedges%20and%20flowers%2C%20soft%20warm%20evening%20light%2C%20premium%20architectural%20photography%2C%20luxurious%20yet%20welcoming%20student%20residence&width=1000&height=700&seq=hostel-04-dha&orientation=landscape"],
+    [5, "https://readdy.ai/api/search-image?query=Comfortable%20modern%20student%20hostel%20building%20with%20warm%20beige%20exterior%20and%20neat%20balconies%2C%20family%20friendly%20residential%20neighborhood%20setting%20with%20green%20trees%20and%20clean%20streets%2C%20soft%20warm%20daylight%2C%20clear%20sky%2C%20professional%20architectural%20photography%2C%20safe%20premium%20student%20accommodation&width=1000&height=700&seq=hostel-05-wapda&orientation=landscape"],
+    [6, "https://readdy.ai/api/search-image?query=Modern%20gated%20student%20hostel%20building%20in%20a%20well%20planned%20community%2C%20warm%20cream%20facade%20with%20contemporary%20architectural%20lines%2C%20wide%20clean%20roads%20and%20green%20parks%20nearby%2C%20bright%20warm%20sunlight%2C%20blue%20sky%2C%20professional%20architectural%20photography%2C%20premium%20secure%20student%20living&width=1000&height=700&seq=hostel-06-bahria&orientation=landscape"],
+  ];
+  for (const [hid, img] of HOSTEL_IMAGES) {
+    await conn.query(
+      "UPDATE hostels SET image_url = ? WHERE id = ? AND (image_url IS NULL OR image_url = '')",
+      [img, hid]
+    );
+  }
+
   console.log("Creating tables…");
   await conn.query(`CREATE TABLE IF NOT EXISTS complaints (
       id           INT UNSIGNED NOT NULL AUTO_INCREMENT,

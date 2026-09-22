@@ -3,9 +3,8 @@ import { Link } from "react-router-dom";
 import SiteNavbar from "@/components/feature/SiteNavbar";
 import SiteFooter from "@/components/feature/SiteFooter";
 import WhatsAppFab from "@/pages/home/components/WhatsAppFab";
-import { hostels } from "@/mocks/hostels";
-
-type Hostel = (typeof hostels)[number];
+import { useHostelsFull } from "@/hooks/useHostelsFull";
+import type { Hostel } from "@/lib/hostelsDb";
 
 function HostelCard({ h }: { h: Hostel }) {
   const isBoys = h.gender === "boys";
@@ -19,7 +18,7 @@ function HostelCard({ h }: { h: Hostel }) {
         />
         <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-background-50/95 backdrop-blur text-xs font-semibold text-primary-700">
           <i className="ri-map-pin-line mr-1"></i>
-          {h.location}
+          {h.location ?? "Lahore"}
         </div>
         <div
           className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold text-background-50 flex items-center gap-1 ${
@@ -88,11 +87,12 @@ function HostelCard({ h }: { h: Hostel }) {
 
 export default function Hostels() {
   const [query, setQuery] = useState("");
+  const { hostels, loading, error, reload } = useHostelsFull();
 
   const filtered = hostels.filter(
     (h) =>
       h.name.toLowerCase().includes(query.toLowerCase()) ||
-      h.location.toLowerCase().includes(query.toLowerCase()),
+      (h.location ?? "").toLowerCase().includes(query.toLowerCase()),
   );
 
   const sections = [
@@ -162,7 +162,22 @@ export default function Hostels() {
             </div>
           </div>
 
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="py-20 text-center text-foreground-500">
+              <i className="ri-loader-4-line animate-spin text-3xl"></i>
+              <p className="mt-3 text-sm">Loading hostels…</p>
+            </div>
+          ) : error ? (
+            <div className="py-20 text-center">
+              <p className="text-sm text-accent-700">{error}</p>
+              <button
+                onClick={reload}
+                className="mt-4 px-4 py-2 rounded-md bg-primary-500 hover:bg-primary-600 text-background-50 text-sm font-semibold whitespace-nowrap cursor-pointer transition"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-20 text-foreground-500">
               No hostels match your search.
             </div>

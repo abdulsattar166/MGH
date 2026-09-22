@@ -387,13 +387,25 @@ export async function updateBookingStatusAsync(id: string, status: BookingStatus
 
 export async function loadHostelRooms(hostelId: number): Promise<RoomBeds[]> {
   if (apiMode) {
-    const data = await api.get<{
-      rooms: RoomCatalogEntry[];
-      occupied: ResidentOccupancy[];
-      reserved: ReservationOccupancy[];
-      maintenance: MaintenanceBed[];
-    }>(`/public/availability/${hostelId}`);
-    return buildRoomsFromData(hostelId, data.rooms, data.occupied, data.reserved, data.maintenance);
+    const rows = await api.get<
+      Array<{
+        label: string;
+        block: string;
+        floor: number;
+        capacity: number;
+        beds: Bed[];
+        availableCount: number;
+      }>
+    >(`/rooms/booking-rooms?hostelId=${hostelId}`);
+    return rows.map((r) => ({
+      label: r.label,
+      block: r.block,
+      floor: r.floor,
+      capacity: r.capacity,
+      beds: r.beds,
+      availableCount: r.availableCount,
+      image: getRoomImage(`${hostelId}-${r.label}`),
+    }));
   }
   const rooms = await fetchBookingRooms(hostelId);
   return rooms as RoomBeds[];
@@ -407,20 +419,23 @@ export async function loadAvailabilitySummaries(
     const perHostel = await Promise.all(
       hostelIds.map(async (id) => {
         const data = await api.get<{
-          rooms: RoomCatalogEntry[];
-          occupied: ResidentOccupancy[];
-          reserved: ReservationOccupancy[];
-          maintenance: MaintenanceBed[];
-        }>(`/public/availability/${id}`);
+          totalRooms: number;
+          totalBeds: number;
+          availableBeds: number;
+          availableRooms: number;
+        }>(`/rooms/public-availability/${id}`);
         return {
           id,
-          rooms: buildRoomsFromData(id, data.rooms, data.occupied, data.reserved, data.maintenance),
+          summary: {
+            totalRooms: Number(data.totalRooms),
+            totalBeds: Number(data.totalBeds),
+            availableBeds: Number(data.availableBeds),
+            availableRooms: Number(data.availableRooms),
+          },
         };
       }),
     );
-    for (const { id, rooms } of perHostel) {
-      result[id] = summarizeRooms(rooms);
-    }
+    for (const { id, summary } of perHostel) result[id] = summary;
     return result;
   }
   const result: Record<number, AvailabilitySummary> = {};

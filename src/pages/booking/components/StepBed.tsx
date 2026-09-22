@@ -1,8 +1,9 @@
-import { hostels } from "@/mocks/hostels";
 import { type Bed } from "@/lib/booking";
 import { useHostelRooms } from "@/hooks/useHostelRooms";
+import type { Hostel } from "@/lib/hostelsDb";
 
 type Props = {
+  hostels: Hostel[];
   hostelId: number;
   roomLabel: string;
   selectedBed: number | null;
@@ -10,7 +11,7 @@ type Props = {
   onBack: () => void;
 };
 
-export default function StepBed({ hostelId, roomLabel, selectedBed, onSelect, onBack }: Props) {
+export default function StepBed({ hostels, hostelId, roomLabel, selectedBed, onSelect, onBack }: Props) {
   const hostel = hostels.find((h) => h.id === hostelId);
   const rooms = useHostelRooms(hostelId);
   const room = rooms.find((r) => r.label === roomLabel);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { hostels, hostelLocations } from "@/mocks/hostels";
+import { useHostelFull } from "@/hooks/useHostelFull";
+import { getHostelLocation } from "@/lib/hostelContent";
 import { useAuth } from "@/hooks/useAuth";
 import { useWardens } from "@/hooks/useWardens";
 import { api, apiMode } from "@/lib/api";
@@ -10,8 +11,9 @@ import { supabase } from "@/lib/supabase";
 export default function WardenLogin() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const hostel = hostels.find((h) => h.id === Number(id));
-  const loc = hostelLocations.find((l) => l.id === Number(id));
+  const numId = id ? Number(id) : null;
+  const { hostel, loading } = useHostelFull(numId);
+  const loc = getHostelLocation(numId ?? 0, hostel ?? undefined);
   const { forHostel } = useWardens();
   const { signIn, signOut } = useAuth();
 
@@ -20,10 +22,31 @@ export default function WardenLogin() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  if (!hostel || !loc) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background-50">
+        <i className="ri-loader-4-line animate-spin text-3xl text-foreground-500"></i>
+      </div>
+    );
+  }
+
+  if (!hostel) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background-50 px-4 text-center">
+        <i className="ri-error-warning-line text-5xl text-accent-500"></i>
+        <h1 className="font-heading text-2xl font-bold text-foreground-950 mt-4">Hostel not found</h1>
+        <Link
+          to="/hostels"
+          className="mt-6 px-6 py-3 rounded-md bg-primary-500 text-background-50 font-semibold cursor-pointer"
+        >
+          View All Hostels
+        </Link>
+      </div>
+    );
+  }
 
   const warden = forHostel(hostel.id);
-  const wardenName = warden?.name ?? loc.warden;
+  const wardenName = warden?.name ?? (loc.warden || "Warden");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

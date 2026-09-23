@@ -1,12 +1,14 @@
 import { useRef, useState } from "react";
 import type { RoomView, Bed } from "@/hooks/useRooms";
-import { useRoomImage } from "@/hooks/useRoomImage";
-import { fileToResizedDataUrl, isAcceptedImage, isWithinSizeLimit } from "@/lib/image";
+import { isAcceptedImage, isWithinSizeLimit } from "@/lib/image";
+import { resolveImageUrl, uploadFile } from "@/lib/api";
+import { defaultRoomImage } from "@/lib/roomImages";
 
 type Props = {
   room: RoomView;
   onAssign: (room: RoomView, bed: Bed) => void;
   onViewStudent: (studentId: number) => void;
+  onRoomImageUpdate?: (room: RoomView, url: string) => void;
   onToggleMaintenance?: (bedId: number, current: boolean) => void;
   onEdit?: (room: RoomView) => void;
   onDelete?: (room: RoomView) => void;
@@ -16,12 +18,16 @@ export default function RoomCard({
   room,
   onAssign,
   onViewStudent,
+  onRoomImageUpdate,
   onToggleMaintenance,
   onEdit,
   onDelete,
 }: Props) {
   const occupiedCount = room.beds.filter((b) => b.status === "occupied").length;
-  const { image, update } = useRoomImage(room.id);
+  const [image, setImage] = useState<string>(() =>
+    room.imageUrl ? resolveImageUrl(room.imageUrl) ?? "" : defaultRoomImage(room.id),
+  );
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [maintMode, setMaintMode] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -37,12 +43,20 @@ export default function RoomCard({
       setError("Image must be under 5 MB.");
       return;
     }
+    setUploading(true);
     try {
-      const dataUrl = await fileToResizedDataUrl(file);
-      update(dataUrl);
+      const url = await uploadFile(file);
+      if (!url) {
+        setError("Could not upload this image. Please try again.");
+        return;
+      }
+      setImage(resolveImageUrl(url) ?? url);
+      onRoomImageUpdate?.(room, resolveImageUrl(url) ?? url);
       setError(null);
     } catch {
-      setError("Could not process this image. Please try another file.");
+      setError("Could not upload this image. Please try again.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -63,12 +77,23 @@ export default function RoomCard({
       }`}
     >
       <div className="relative h-36 w-full overflow-hidden bg-background-100">
-        <img
-          src={image}
-          alt={`Room ${room.number}`}
-          title={`Room ${room.number}`}
-          className="w-full h-full object-cover"
-        />
+        {image ? (
+          <img
+            src={image}
+            alt={`Room ${room.number}`}
+            title={`Room ${room.number}`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-foreground-300">
+            <i className="ri-door-open-line text-4xl"></i>
+          </div>
+        )}
+        {uploading && (
+          <div className="absolute inset-0 bg-foreground-950/40 flex items-center justify-center">
+            <i className="ri-loader-4-line animate-spin text-background-50 text-xl"></i>
+          </div>
+        )}
         <div className="absolute bottom-2 left-2 flex gap-2">
           <button
             onClick={() => fileRef.current?.click()}
@@ -84,7 +109,7 @@ export default function RoomCard({
           accept="image/jpeg,image/png,image/webp"
           className="hidden"
           onChange={(e) => {
-            handleFile(e.target.files?.[0]);
+            void handleFile(e.target.files?.[0]);
             e.target.value = "";
           }}
         />

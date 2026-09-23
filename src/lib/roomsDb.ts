@@ -10,6 +10,7 @@ export type DbRoom = {
   room_type: string;
   capacity: number;
   status: string;
+  image_url?: string | null;
 };
 
 export type DbBed = {
@@ -162,6 +163,7 @@ export type RoomInput = {
   roomType: string;
   capacity: number;
   status: string;
+  imageUrl?: string | null;
 };
 
 export async function addRoom(hostelId: number, input: RoomInput): Promise<void> {
@@ -178,6 +180,7 @@ export async function addRoom(hostelId: number, input: RoomInput): Promise<void>
       room_type: input.roomType,
       capacity: input.capacity,
       status: input.status,
+      image_url: input.imageUrl ?? null,
     })
     .select("id")
     .maybeSingle();
@@ -200,6 +203,7 @@ export async function updateRoom(
     room_type?: string;
     capacity?: number;
     status?: string;
+    image_url?: string | null;
   },
 ): Promise<void> {
   if (apiMode) {

@@ -1,5 +1,6 @@
 import type { Student } from "@/mocks/management/students";
 import { useHostels } from "@/hooks/useHostels";
+import { resolveImageUrl } from "@/lib/api";
 
 type Props = {
   students: Student[];
@@ -10,6 +11,7 @@ type Props = {
 
 const statusTone: Record<Student["status"], string> = {
   Active: "bg-primary-100 text-primary-800",
+  "Fee Due": "bg-accent-100 text-accent-900",
   Notice: "bg-accent-100 text-accent-800",
   Left: "bg-background-200 text-foreground-500",
 };
@@ -53,8 +55,12 @@ export default function StudentTable({ students, onView, onEdit, onDelete }: Pro
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-secondary-500 text-background-50 flex items-center justify-center text-sm font-bold shrink-0">
-                      {s.name.charAt(0)}
+                    <div className="w-9 h-9 rounded-full bg-secondary-500 text-background-50 flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden">
+                      {s.imageUrl ? (
+                        <img src={resolveImageUrl(s.imageUrl) ?? ""} alt={s.name} className="w-full h-full object-cover" />
+                      ) : (
+                        s.name.charAt(0)
+                      )}
                     </div>
                     <div className="leading-tight">
                       <div className="font-semibold text-foreground-900">{s.name}</div>

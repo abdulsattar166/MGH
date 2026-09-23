@@ -138,6 +138,13 @@ export type BookingStatusView = {
   bed_number: number;
   status: BookingStatus;
   created_at: string;
+  fee_amount?: number;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  rejected_by?: string | null;
+  rejected_at?: string | null;
+  reason?: string | null;
+  tracking?: Array<{ status: string; at: string; by?: string | null; note?: string | null }>;
 };
 
 // Public lookup of a booking's approval status by its reference. Returns only
@@ -146,7 +153,8 @@ export async function fetchBookingByReference(
   reference: string,
 ): Promise<BookingStatusView | null> {
   if (apiMode) {
-    return api.get<BookingStatusView | null>(`/public/track/${encodeURIComponent(reference)}`);
+    const data = await api.get<BookingStatusView | null>(`/public/track/${encodeURIComponent(reference)}`);
+    return data;
   }
   const { data, error } = await supabase.rpc("track_booking", { p_reference: reference });
   if (error) throw new Error(error.message);

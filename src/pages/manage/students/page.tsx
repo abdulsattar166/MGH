@@ -127,6 +127,7 @@ export default function Students() {
           >
             <option value="All">All Statuses</option>
             <option value="Active">Active</option>
+            <option value="Fee Due">Fee Due</option>
             <option value="Notice">Notice</option>
             <option value="Left">Left</option>
           </select>

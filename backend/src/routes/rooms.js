@@ -70,6 +70,7 @@ router.get("/data", requireAuth, async (req, res) => {
         room_type: r.room_type,
         capacity: Number(r.capacity),
         status: r.status,
+        image_url: r.image_url ?? null,
         building_id: r.building_id != null ? Number(r.building_id) : null,
         block_id: r.block_id != null ? Number(r.block_id) : null,
       })),
@@ -191,8 +192,8 @@ router.post("/add", requireAuth, async (req, res) => {
     if (dup.length) throw new Error("A room with this number already exists in this hostel.");
 
     const [result] = await conn.query(
-      `INSERT INTO hostel_rooms (hostel_id, building_id, block_id, room_number, floor, room_type, capacity, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO hostel_rooms (hostel_id, building_id, block_id, room_number, floor, room_type, capacity, status, image_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         hostelId,
         b.buildingId ? Number(b.buildingId) : null,
@@ -202,6 +203,7 @@ router.post("/add", requireAuth, async (req, res) => {
         String(b.roomType || ""),
         Number(b.capacity ?? 3),
         String(b.status || "active"),
+        b.imageUrl ? String(b.imageUrl) : null,
       ]
     );
     const roomId = Number(result.insertId);
@@ -241,8 +243,8 @@ router.post("/bulk", requireAuth, async (req, res) => {
       );
       if (dup.length) continue;
       const [result] = await conn.query(
-        `INSERT INTO hostel_rooms (hostel_id, building_id, block_id, room_number, floor, room_type, capacity, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO hostel_rooms (hostel_id, building_id, block_id, room_number, floor, room_type, capacity, status, image_url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           Number(r.hostelId),
           r.buildingId ? Number(r.buildingId) : null,
@@ -252,6 +254,7 @@ router.post("/bulk", requireAuth, async (req, res) => {
           String(r.roomType || ""),
           Number(r.capacity ?? 3),
           String(r.status || "active"),
+          r.imageUrl ? String(r.imageUrl) : null,
         ]
       );
       inserted += 1;
@@ -293,6 +296,7 @@ router.put("/:roomId", requireAuth, async (req, res) => {
     if (b.floor !== undefined) { fields.push("floor = ?"); params.push(Number(b.floor)); }
     if (b.room_type !== undefined) { fields.push("room_type = ?"); params.push(String(b.room_type)); }
     if (b.status !== undefined) { fields.push("status = ?"); params.push(String(b.status)); }
+    if (b.image_url !== undefined) { fields.push("image_url = ?"); params.push(b.image_url ? String(b.image_url) : null); }
     if (b.capacity !== undefined) { fields.push("capacity = ?"); params.push(Number(b.capacity)); }
     if (b.building_id !== undefined) { fields.push("building_id = ?"); params.push(b.building_id ? Number(b.building_id) : null); }
     if (b.block_id !== undefined) { fields.push("block_id = ?"); params.push(b.block_id ? Number(b.block_id) : null); }

@@ -13,5 +13,6 @@ export type Student = {
   guardianPhone: string;
   joinDate: string;
   monthlyFee: number;
-  status: "Active" | "Notice" | "Left";
+  status: "Active" | "Notice" | "Left" | "Fee Due";
+  imageUrl: string;
 };

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Hostel } from "@/lib/hostelsDb";
+import ImageUpload from "@/pages/manage/components/ImageUpload";
 
 export type HostelFormValues = {
   name: string;
@@ -207,13 +208,14 @@ export default function HostelFormModal({ open, hostel, saving, error, onSubmit,
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground-800 mb-1.5">Image URL</label>
-            <input
-              className={inputClass}
+            <ImageUpload
+              label="Hostel Photo"
               value={values.imageUrl}
-              onChange={(e) => set({ imageUrl: e.target.value })}
-              placeholder="https://…"
+              onChange={(url) => set({ imageUrl: url ?? "" })}
             />
+            <p className="mt-1 text-xs text-foreground-400">
+              Drag and drop a photo, or browse from your computer. No URL needed.
+            </p>
           </div>
 
           {error && (

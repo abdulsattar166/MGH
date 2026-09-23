@@ -2,6 +2,7 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 import { requireAuth } from "../middleware/auth.js";
+import { notify, notifyRole } from "../notify.js";
 
 // Complaint flow (REST mirror of the Supabase `complaints-api` edge function):
 //   POST /api/complaints/list    — role-scoped list w/ filters
@@ -228,6 +229,27 @@ router.post("/create", async (req, res) => {
       ]
     );
     const [rows] = await pool.query("SELECT * FROM complaints WHERE id = ?", [result.insertId]);
+
+    // Notify the responsible warden and the super admin about the new complaint.
+    if (warden?.id) {
+      await notify({
+        user_id: Number(warden.id),
+        type: "complaint",
+        title: "New complaint",
+        message: `${studentName ?? "A student"} submitted a ${priority} complaint (${category}): ${description.slice(0, 120)}`,
+        link: "/manage/complaints",
+        data: { complaint_id: Number(result.insertId) },
+      });
+    }
+    await notifyRole({
+      role: "admin",
+      type: "complaint",
+      title: "New complaint",
+      message: `${studentName ?? "A student"} submitted a complaint in ${hostelId ? "hostel #" + hostelId : "your network"}.`,
+      link: "/manage/complaints",
+      data: { complaint_id: Number(result.insertId) },
+    });
+
     res.json({ ok: true, complaint: mapComplaint(rows[0]) });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -261,6 +283,31 @@ router.post("/update", requireAuth, async (req, res) => {
     const sets = Object.keys(fields).map((k) => `${k} = ?`).join(", ");
     const values = Object.values(fields);
     await pool.query(`UPDATE complaints SET ${sets} WHERE id = ?`, [...values, id]);
+
+    if (req.body.status !== undefined && String(req.body.status) !== complaint.status) {
+      const note = `${me.name ?? "Staff"} changed the status of complaint ${complaint.code || id} from ${complaint.status} to ${req.body.status}.`;
+      // Notify the other party: the warden of the hostel (when an admin updates), or the super admin (when a warden updates).
+      if (isStaff && complaint.warden_id) {
+        await notify({
+          user_id: Number(complaint.warden_id),
+          type: "complaint",
+          title: "Complaint updated",
+          message: note,
+          link: "/manage/complaints",
+          data: { complaint_id: id },
+        });
+      }
+      if (!isStaff) {
+        await notifyRole({
+          role: "admin",
+          type: "complaint",
+          title: `Complaint ${req.body.status}`,
+          message: note,
+          link: "/manage/complaints",
+          data: { complaint_id: id },
+        });
+      }
+    }
 
     const [rows] = await pool.query("SELECT * FROM complaints WHERE id = ?", [id]);
     res.json({ ok: true, complaint: mapComplaint(rows[0]) });

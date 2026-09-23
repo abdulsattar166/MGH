@@ -33,6 +33,7 @@ export type RoomView = {
   type: RoomType;
   capacity: number;
   status: string;
+  imageUrl?: string | null;
   beds: Bed[];
 };
 
@@ -72,6 +73,7 @@ function buildRooms(rooms: DbRoom[], beds: DbBed[], allocations: DbAllocation[])
         type: r.room_type as RoomType,
         capacity: r.capacity,
         status: r.status,
+        imageUrl: r.image_url ?? null,
         beds: bedsView,
       };
     });

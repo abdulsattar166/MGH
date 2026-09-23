@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { AuthUser } from "@/hooks/useAuth";
 import { useHostels } from "@/hooks/useHostels";
 import { roleLabel } from "@/lib/roles";
+import NotificationsBell from "./NotificationsBell";
 
 type Props = {
   user: AuthUser;
@@ -43,13 +44,7 @@ export default function Topbar({ user, title, onMenuClick, onLogout }: Props) {
       </div>
 
       <div className="flex items-center gap-2 md:gap-3">
-        <button
-          className="hidden sm:flex w-10 h-10 items-center justify-center text-foreground-600 cursor-pointer rounded-md hover:bg-background-100 relative"
-          aria-label="Notifications"
-        >
-          <i className="ri-notification-3-line text-xl"></i>
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent-500"></span>
-        </button>
+        <NotificationsBell />
 
         <div className="relative">
           <button

@@ -14,6 +14,7 @@ const titles: Record<string, string> = {
   "/manage/fees": "Fees",
   "/manage/attendance": "Attendance",
   "/manage/complaints": "Complaints",
+  "/manage/improvements": "Improvements",
   "/manage/notices": "Notices",
   "/manage/visitors": "Visitors",
   "/manage/reports": "Reports",

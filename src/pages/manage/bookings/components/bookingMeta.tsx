@@ -6,10 +6,25 @@ export const statusMeta: Record<
   { label: string; cls: string; icon: string }
 > = {
   pending: { label: "Pending", cls: "bg-accent-100 text-accent-900", icon: "ri-time-line" },
+  under_review: { label: "Under Review", cls: "bg-secondary-100 text-secondary-900", icon: "ri-search-eye-line" },
   approved: { label: "Approved", cls: "bg-primary-100 text-primary-700", icon: "ri-checkbox-circle-line" },
   rejected: { label: "Rejected", cls: "bg-secondary-100 text-secondary-900", icon: "ri-close-circle-line" },
   cancelled: { label: "Cancelled", cls: "bg-background-200 text-foreground-500", icon: "ri-forbid-line" },
+  checked_in: { label: "Checked In", cls: "bg-primary-100 text-primary-700", icon: "ri-login-box-line" },
+  completed: { label: "Completed", cls: "bg-background-200 text-foreground-600", icon: "ri-check-double-line" },
 };
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const BOOKING_STATUS_FILTERS: { value: BookingStatus | "all"; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "under_review", label: "Under Review" },
+  { value: "approved", label: "Approved" },
+  { value: "rejected", label: "Rejected" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "checked_in", label: "Checked In" },
+  { value: "completed", label: "Completed" },
+];
 
 export function BookingStatusBadge({ status }: { status: BookingStatus }) {
   const meta = statusMeta[status];

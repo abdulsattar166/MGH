@@ -2,27 +2,35 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookings } from "@/hooks/useBookings";
 import { useHostels } from "@/hooks/useHostels";
-import { updateBookingStatusAsync, type Booking, type BookingStatus } from "@/lib/booking";
+import { useWardens } from "@/hooks/useWardens";
+import {
+  approveBookingAsync,
+  rejectBookingAsync,
+  type Booking,
+  type BookingStatus,
+} from "@/lib/booking";
 import BookingDetailModal from "./components/BookingDetailModal";
-import { BookingStatusBadge, formatDate, matchesQuery } from "./components/bookingMeta";
-
-const STATUS_FILTERS: { value: BookingStatus | "all"; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-  { value: "cancelled", label: "Cancelled" },
-];
+import {
+  BookingStatusBadge,
+  BOOKING_STATUS_FILTERS,
+  formatDate,
+  matchesQuery,
+} from "./components/bookingMeta";
 
 export default function Bookings() {
   const { user } = useAuth();
   const { hostels } = useHostels();
+  const { wardens } = useWardens();
   const { bookings, loading, error, reload } = useBookings();
   const [hostelFilter, setHostelFilter] = useState<number | "all">("all");
+  const [wardenFilter, setWardenFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Booking | null>(null);
+  const [rejecting, setRejecting] = useState<Booking | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
   const [actionError, setActionError] = useState("");
+  const [working, setWorking] = useState(false);
 
   const isWarden = user?.role === "warden";
 
@@ -37,22 +45,43 @@ export default function Bookings() {
   const filtered = useMemo(() => {
     return scoped
       .filter((b) => (hostelFilter === "all" ? true : b.hostelId === hostelFilter))
+      .filter((b) => (wardenFilter === "all" ? true : String(b.wardenId) === wardenFilter))
       .filter((b) => (statusFilter === "all" ? true : b.status === statusFilter))
       .filter((b) => matchesQuery(b, query))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }, [scoped, hostelFilter, statusFilter, query]);
+  }, [scoped, hostelFilter, wardenFilter, statusFilter, query]);
 
-  const pendingCount = scoped.filter((b) => b.status === "pending").length;
+  const pendingCount = scoped.filter((b) => b.status === "pending" || b.status === "under_review").length;
 
-  const handleStatus = async (id: string, status: BookingStatus) => {
+  const runAction = async (fn: () => Promise<unknown>) => {
     setActionError("");
+    setWorking(true);
     try {
-      await updateBookingStatusAsync(id, status);
+      await fn();
       setSelected(null);
+      setRejecting(null);
+      setRejectReason("");
       await reload();
     } catch (e) {
       setActionError((e as Error).message || "Could not update this booking.");
+    } finally {
+      setWorking(false);
     }
+  };
+
+  const handleApprove = (id: string) => runAction(() => approveBookingAsync(id));
+  const handleReject = (id: string) => {
+    if (!rejectReason.trim()) {
+      setActionError("Please provide a reason for the rejection.");
+      return;
+    }
+    runAction(() => rejectBookingAsync(id, rejectReason.trim()));
+  };
+
+  const wardenNameFor = (b: Booking) => {
+    if (b.wardenName) return b.wardenName;
+    const w = wardens.find((x) => x.id === String(b.wardenId));
+    return w?.name ?? null;
   };
 
   return (
@@ -74,8 +103,15 @@ export default function Bookings() {
         )}
       </div>
 
+      {actionError && (
+        <div className="bg-accent-50 border border-accent-200 text-accent-900 rounded-md px-4 py-3 text-sm">
+          <i className="ri-error-warning-line mr-1.5"></i>
+          {actionError}
+        </div>
+      )}
+
       {/* Filters */}
-      <div className="flex flex-col md:flex-row md:items-center gap-3">
+      <div className="flex flex-col lg:flex-row gap-3">
         <div className="relative flex-1">
           <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-foreground-400"></i>
           <input
@@ -103,21 +139,32 @@ export default function Bookings() {
           </select>
         )}
 
-        <div className="flex flex-wrap gap-1.5">
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setStatusFilter(s.value)}
-              className={`px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap cursor-pointer transition ${
-                statusFilter === s.value
-                  ? "bg-primary-500 text-background-50"
-                  : "bg-background-100 text-foreground-600 hover:bg-background-200"
-              }`}
-            >
+        {!isWarden && (
+          <select
+            value={wardenFilter}
+            onChange={(e) => setWardenFilter(e.target.value)}
+            className="px-3 py-2.5 rounded-md border border-background-300 bg-background-50 text-foreground-900 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400"
+          >
+            <option value="all">All Wardens</option>
+            {wardens.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as BookingStatus | "all")}
+          className="px-3 py-2.5 rounded-md border border-background-300 bg-background-50 text-foreground-900 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-400"
+        >
+          {BOOKING_STATUS_FILTERS.map((s) => (
+            <option key={s.value} value={s.value}>
               {s.label}
-            </button>
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
       {error && (
@@ -132,13 +179,6 @@ export default function Bookings() {
           >
             Retry
           </button>
-        </div>
-      )}
-
-      {actionError && (
-        <div className="bg-accent-50 border border-accent-200 text-accent-900 rounded-md px-4 py-3 text-sm">
-          <i className="ri-error-warning-line mr-1.5"></i>
-          {actionError}
         </div>
       )}
 
@@ -169,13 +209,13 @@ export default function Bookings() {
                     Applicant
                   </th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-500 whitespace-nowrap">
-                    Hostel
+                    Hostel / Warden
                   </th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-500 whitespace-nowrap">
                     Room / Bed
                   </th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-500 whitespace-nowrap">
-                    Joining
+                    Fee
                   </th>
                   <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-foreground-500 whitespace-nowrap">
                     Status
@@ -186,61 +226,85 @@ export default function Bookings() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((b) => (
-                  <tr key={b.id} className="border-b border-background-100 last:border-0 hover:bg-background-50">
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-foreground-900 whitespace-nowrap">{b.id}</div>
-                      <div className="text-xs text-foreground-400">{formatDate(b.createdAt)}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-medium text-foreground-900 whitespace-nowrap">
-                        {b.applicant.fullName}
-                      </div>
-                      <div className="text-xs text-foreground-500">{b.applicant.cnic}</div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground-600 whitespace-nowrap">
-                      {b.hostelName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground-600 whitespace-nowrap">
-                      {b.roomLabel} · Bed {b.bedNumber}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-foreground-600 whitespace-nowrap">
-                      {b.applicant.joiningDate || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <BookingStatusBadge status={b.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelected(b)}
-                          className="w-8 h-8 rounded-md flex items-center justify-center text-foreground-500 hover:bg-background-100 cursor-pointer"
-                          title="View details"
-                        >
-                          <i className="ri-eye-line"></i>
-                        </button>
-                        {b.status === "pending" && (
-                          <>
-                            <button
-                              onClick={() => handleStatus(b.id, "approved")}
-                              className="w-8 h-8 rounded-md flex items-center justify-center text-primary-600 hover:bg-primary-100 cursor-pointer"
-                              title="Approve"
-                            >
-                              <i className="ri-check-line"></i>
-                            </button>
-                            <button
-                              onClick={() => handleStatus(b.id, "rejected")}
-                              className="w-8 h-8 rounded-md flex items-center justify-center text-secondary-700 hover:bg-secondary-100 cursor-pointer"
-                              title="Reject"
-                            >
-                              <i className="ri-close-line"></i>
-                            </button>
-                          </>
+                {filtered.map((b) => {
+                  const actionable = b.status === "pending" || b.status === "under_review";
+                  return (
+                    <tr key={b.id} className="border-b border-background-100 last:border-0 hover:bg-background-50">
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-foreground-900 whitespace-nowrap">{b.id}</div>
+                        <div className="text-xs text-foreground-400">{formatDate(b.createdAt)}</div>
+                        {b.approvedBy && (
+                          <div className="text-[11px] text-primary-700 mt-0.5">
+                            ✓ by {b.approvedBy} · {b.approvedAt ? formatDate(b.approvedAt) : ""}
+                          </div>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-foreground-900 whitespace-nowrap">
+                          {b.applicant.fullName}
+                        </div>
+                        <div className="text-xs text-foreground-500">{b.applicant.cnic}</div>
+                        <div className="text-[11px] text-foreground-400">{b.applicant.mobile}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground-600 whitespace-nowrap">
+                        <div>{b.hostelName}</div>
+                        <div className="text-[11px] text-foreground-400">
+                          {wardenNameFor(b) ? `Warden: ${wardenNameFor(b)}` : "No warden"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground-600 whitespace-nowrap">
+                        {b.roomLabel} · Bed {b.bedNumber}
+                        <div className="text-[11px] text-foreground-400">Floor {b.floor}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-foreground-600 whitespace-nowrap">
+                        {b.feeAmount ? `PKR ${Number(b.feeAmount).toLocaleString()}` : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <BookingStatusBadge status={b.status} />
+                        {b.reason && b.status === "rejected" && (
+                          <div className="text-[11px] text-secondary-800 ml-1 mt-1 max-w-[160px] truncate" title={b.reason}>
+                            {b.reason}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setSelected(b)}
+                            className="w-8 h-8 rounded-md flex items-center justify-center text-foreground-500 hover:bg-background-100 cursor-pointer"
+                            title="View details"
+                          >
+                            <i className="ri-eye-line"></i>
+                          </button>
+                          {actionable && (
+                            <>
+                              <button
+                                onClick={() => void handleApprove(b.id)}
+                                disabled={working}
+                                className="w-8 h-8 rounded-md flex items-center justify-center text-primary-600 hover:bg-primary-100 cursor-pointer disabled:opacity-50"
+                                title="Approve"
+                              >
+                                <i className="ri-check-line"></i>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setRejecting(b);
+                                  setRejectReason("");
+                                  setActionError("");
+                                }}
+                                disabled={working}
+                                className="w-8 h-8 rounded-md flex items-center justify-center text-secondary-700 hover:bg-secondary-100 cursor-pointer disabled:opacity-50"
+                                title="Reject"
+                              >
+                                <i className="ri-close-line"></i>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -251,9 +315,58 @@ export default function Bookings() {
         <BookingDetailModal
           booking={selected}
           onClose={() => setSelected(null)}
-          onApprove={() => handleStatus(selected.id, "approved")}
-          onReject={() => handleStatus(selected.id, "rejected")}
+          onApprove={() => void handleApprove(selected.id)}
+          onReject={() => setSelected(null)}
+          wardenName={selected ? wardenNameFor(selected) : null}
         />
+      )}
+
+      {/* Reject dialog */}
+      {rejecting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-foreground-950/50" onClick={() => !working && setRejecting(null)}></div>
+          <div className="relative w-full max-w-md bg-background-50 rounded-2xl border border-background-200 p-6">
+            <h3 className="font-heading text-lg font-bold text-foreground-950">Reject this booking?</h3>
+            <p className="mt-1 text-sm text-foreground-500">
+              Booking <span className="font-semibold text-foreground-900">{rejecting.id}</span> ·{" "}
+              {rejecting.applicant.fullName} · Room {rejecting.roomLabel} · Bed {rejecting.bedNumber}
+            </p>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-foreground-800 mb-1.5">
+                Rejection reason <span className="text-accent-600">*</span>
+              </label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={3}
+                placeholder="e.g. No beds are currently available for the requested period."
+                className="w-full px-3 py-2 rounded-md border border-background-300 bg-background-50 text-foreground-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
+              />
+            </div>
+            {actionError && (
+              <div className="mt-3 text-sm text-accent-700 bg-accent-100 rounded-md px-3 py-2">
+                {actionError}
+              </div>
+            )}
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setRejecting(null)}
+                disabled={working}
+                className="px-5 py-2.5 rounded-md border border-background-300 text-foreground-700 text-sm font-semibold whitespace-nowrap hover:bg-background-100 cursor-pointer transition disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleReject(rejecting.id)}
+                disabled={working}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-secondary-700 hover:bg-secondary-800 text-background-50 text-sm font-semibold whitespace-nowrap cursor-pointer transition disabled:opacity-60"
+              >
+                {working && <i className="ri-loader-4-line animate-spin"></i>}
+                Confirm Rejection
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

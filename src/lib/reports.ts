@@ -24,10 +24,16 @@ export type WardenStatRow = {
   complaints: number;
   resolved: number;
   pending: number;
+  feeCollected?: number;
+  feePending?: number;
+  improvements?: number;
+  checkIns?: number;
+  checkOuts?: number;
 };
 
 export type ReportsData = {
   generatedAt: string;
+  generatedBy?: string | null;
   scope: number | null;
   summary: {
     totalStudents: number;
@@ -42,8 +48,31 @@ export type ReportsData = {
     inProgressComplaints: number;
     resolvedComplaints: number;
     rejectedComplaints: number;
+    feeCollected: number;
+    feePending: number;
+    feeOverdue: number;
+    feeTotal: number;
+    collectionRate: number;
+    paidStudents: number;
+    pendingFeeStudents: number;
+    totalImprovements: number;
+    improvementsImplemented: number;
+    improvementsAccepted: number;
+    improvementsReviewing: number;
+    improvementsRejected: number;
+    totalBookings: number;
+    pendingBookings: number;
+    approvedBookings: number;
+    rejectedBookings: number;
+    cancelledBookings: number;
+    completedBookings: number;
+    checkIns: number;
+    checkOuts: number;
+    currentResidents: number;
   };
   byStatus: Record<string, number>;
+  improvementByStatus: Record<string, number>;
+  bookingByStatus: Record<string, number>;
   studentsByHostel: HostelReportRow[];
   studentsByRoom: { hostelId: number; room: string; count: number }[];
   complaintsByHostel: { id: number; name: string; total: number; pending: number; resolved: number }[];

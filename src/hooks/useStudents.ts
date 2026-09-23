@@ -20,6 +20,7 @@ type StudentRow = {
   join_date: string;
   monthly_fee: number;
   status: Student["status"];
+  image_url: string | null;
 };
 
 function mapRow(r: StudentRow): Student {
@@ -39,6 +40,7 @@ function mapRow(r: StudentRow): Student {
     joinDate: r.join_date,
     monthlyFee: r.monthly_fee,
     status: r.status,
+    imageUrl: r.image_url ?? "",
   };
 }
 
@@ -58,6 +60,7 @@ function toRow(s: Partial<Omit<Student, "id">>) {
   if (s.joinDate !== undefined) row.join_date = s.joinDate;
   if (s.monthlyFee !== undefined) row.monthly_fee = s.monthlyFee;
   if (s.status !== undefined) row.status = s.status;
+  if (s.imageUrl !== undefined) row.image_url = s.imageUrl;
   return row;
 }
 

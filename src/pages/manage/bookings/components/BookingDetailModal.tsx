@@ -3,6 +3,7 @@ import { BookingStatusBadge, formatDate } from "./bookingMeta";
 
 type Props = {
   booking: Booking;
+  wardenName?: string | null;
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -17,14 +18,63 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
+const STEP_LABELS: Record<string, string> = {
+  pending: "Booking Submitted",
+  under_review: "Under Review",
+  approved: "Approved",
+  rejected: "Rejected",
+  cancelled: "Cancelled",
+  checked_in: "Checked In",
+  completed: "Completed",
+};
+
+function Timeline({ booking }: { booking: Booking }) {
+  const steps = booking.tracking?.length
+    ? booking.tracking
+    : [{ status: "pending", at: booking.createdAt, by: null }];
+  return (
+    <div className="space-y-0">
+      {steps.map((s, i) => (
+        <div key={i} className="flex gap-3">
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-3 h-3 rounded-full mt-1 ${
+                i === steps.length - 1 ? "bg-primary-500" : "bg-background-300"
+              }`}
+            ></div>
+            {i < steps.length - 1 && <div className="w-0.5 flex-1 bg-background-200 my-0.5"></div>}
+          </div>
+          <div className="pb-4">
+            <div className="text-sm font-semibold text-foreground-900">
+              {STEP_LABELS[s.status] ?? s.status}
+            </div>
+            <div className="text-xs text-foreground-500">
+              {new Date(s.at).toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              {s.by ? ` · ${s.by}` : ""}
+            </div>
+            {s.note && <div className="text-xs text-secondary-800 mt-0.5">{s.note}</div>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function BookingDetailModal({
   booking,
+  wardenName,
   onClose,
   onApprove,
   onReject,
 }: Props) {
   const a = booking.applicant;
-  const actionable = booking.status === "pending";
+  const actionable = booking.status === "pending" || booking.status === "under_review";
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -63,6 +113,26 @@ export default function BookingDetailModal({
               <Field label="Bed" value={`Bed ${booking.bedNumber}`} />
               <Field label="Joining Date" value={a.joiningDate} />
             </div>
+            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4 bg-background-100 rounded-md p-4">
+              <Field label="Warden" value={wardenName ?? "Unassigned"} />
+              <Field label="Monthly Fee" value={booking.feeAmount ? `PKR ${Number(booking.feeAmount).toLocaleString()}` : "—"} />
+              <Field label="Approved By" value={booking.approvedBy ?? "—"} />
+              <Field label="Approved On" value={booking.approvedAt ? formatDate(booking.approvedAt) : "—"} />
+            </div>
+            {booking.reason && booking.status === "rejected" && (
+              <div className="mt-3 bg-secondary-100 border border-secondary-200 rounded-md px-4 py-3">
+                <span className="text-xs font-bold text-secondary-900 uppercase tracking-wide">
+                  Rejection reason
+                </span>
+                <p className="text-sm text-foreground-800 mt-1">{booking.reason}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Tracking timeline */}
+          <div>
+            <h4 className="font-heading text-sm font-bold text-foreground-950 mb-3">Status Timeline</h4>
+            <Timeline booking={booking} />
           </div>
 
           {/* Personal & contact */}

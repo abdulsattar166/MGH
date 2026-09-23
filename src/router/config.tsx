@@ -26,6 +26,7 @@ import Fees from "@/pages/manage/fees/page";
 import Visitors from "@/pages/manage/visitors/page";
 import Settings from "@/pages/manage/settings/page";
 import Complaints from "@/pages/manage/complaints/page";
+import Improvements from "@/pages/manage/improvements/page";
 import Notices from "@/pages/manage/notices/page";
 import Reports from "@/pages/manage/reports/page";
 import ManageHostels from "@/pages/manage/hostels/page";
@@ -37,6 +38,7 @@ import ImportPage from "@/pages/manage/import/page";
 import ComplaintPage from "@/pages/complaint/page";
 import MyComplaints from "@/pages/my-complaints/page";
 import TrackBooking from "@/pages/track-booking/page";
+import Suggest from "@/pages/suggest/page";
 
 const routes: RouteObject[] = [
   {
@@ -46,6 +48,10 @@ const routes: RouteObject[] = [
   {
     path: "/complaint",
     element: <ComplaintPage />,
+  },
+  {
+    path: "/suggest",
+    element: <Suggest />,
   },
   {
     path: "/my-complaints",
@@ -108,6 +114,7 @@ const routes: RouteObject[] = [
       { path: "attendance", element: <Attendance /> },
       { path: "visitors", element: <Visitors /> },
       { path: "complaints", element: <Complaints /> },
+      { path: "improvements", element: <Improvements /> },
       { path: "notices", element: <Notices /> },
       { path: "reports", element: <Reports /> },
       { path: "hostels", element: <ManageHostels /> },

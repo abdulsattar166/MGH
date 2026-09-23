@@ -22,7 +22,21 @@ import {
   setBookingStatus,
 } from "@/lib/bookingsDb";
 
-export type BookingStatus = "pending" | "approved" | "rejected" | "cancelled";
+export type BookingStatus =
+  | "pending"
+  | "under_review"
+  | "approved"
+  | "rejected"
+  | "cancelled"
+  | "checked_in"
+  | "completed";
+
+export type BookingTrackingStep = {
+  status: string;
+  at: string;
+  by: string | null;
+  note?: string | null;
+};
 
 export type BedStatus = "available" | "reserved" | "occupied" | "maintenance";
 
@@ -79,6 +93,15 @@ export type Booking = {
   status: BookingStatus;
   createdAt: string;
   applicant: Applicant;
+  feeAmount?: number;
+  wardenId?: number | null;
+  wardenName?: string | null;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectedAt?: string | null;
+  reason?: string | null;
+  tracking?: BookingTrackingStep[];
 };
 
 export type AvailabilitySummary = {
@@ -99,18 +122,43 @@ export type ReservationOccupancy = {
   status: "pending" | "approved";
 };
 
-// Snake-case shape returned by the REST API (MySQL columns).
+// Snake-case shape returned by the REST API (MySQL columns) OR the camelCase
+// shape returned the new role-scoped booking list.
 type BookingRow = {
   id: string;
-  hostel_id: number;
-  hostel_name: string;
-  room_label: string;
-  block: string;
-  floor: number;
-  bed_number: number;
+  hostel_id?: number;
+  hostel_name?: string;
+  room_label?: string;
+  block?: string;
+  floor?: number;
+  bed_number?: number;
   status: BookingStatus;
-  created_at: string;
+  created_at?: string;
   applicant: Applicant;
+  // camelCase (new API)
+  hostelId?: number;
+  hostelName?: string;
+  roomLabel?: string;
+  blockName?: string;
+  floorNo?: number;
+  bedNumber?: number;
+  createdAt?: string;
+  fee_amount?: number;
+  warden_id?: number | null;
+  warden_name?: string | null;
+  feeAmount?: number;
+  wardenId?: number | null;
+  wardenName?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  rejected_by?: string | null;
+  rejected_at?: string | null;
+  reason?: string | null;
+  tracking?: unknown;
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  rejectedBy?: string | null;
+  rejectedAt?: string | null;
 };
 
 export const BOOKING_BLOCKS = [
@@ -210,18 +258,42 @@ function notify(): void {
   window.dispatchEvent(new CustomEvent(CHANGE_EVENT));
 }
 
+function parseTracking(value: unknown): BookingTrackingStep[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value as BookingTrackingStep[];
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as BookingTrackingStep[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 function mapBookingRow(r: BookingRow): Booking {
+  const applicant = r.applicant && typeof r.applicant === "object" && !Array.isArray(r.applicant) ? r.applicant : emptyApplicant;
   return {
     id: r.id,
-    hostelId: Number(r.hostel_id),
-    hostelName: r.hostel_name,
-    roomLabel: r.room_label,
-    block: r.block,
-    floor: Number(r.floor),
-    bedNumber: Number(r.bed_number),
+    hostelId: Number(r.hostelId ?? r.hostel_id),
+    hostelName: String(r.hostelName ?? r.hostel_name ?? ""),
+    roomLabel: String(r.roomLabel ?? r.room_label ?? ""),
+    block: String(r.block ?? r.blockName ?? ""),
+    floor: Number(r.floor ?? r.floorNo ?? 1),
+    bedNumber: Number(r.bedNumber ?? r.bed_number ?? 1),
     status: r.status,
-    createdAt: r.created_at,
-    applicant: r.applicant,
+    createdAt: String(r.createdAt ?? r.created_at ?? new Date().toISOString()),
+    applicant,
+    feeAmount: Number(r.feeAmount ?? r.fee_amount ?? 0),
+    wardenId: r.wardenId != null ? Number(r.wardenId) : r.warden_id != null ? Number(r.warden_id) : null,
+    wardenName: r.wardenName ?? r.warden_name ?? null,
+    approvedBy: r.approvedBy ?? r.approved_by ?? null,
+    approvedAt: r.approvedAt ?? r.approved_at ?? null,
+    rejectedBy: r.rejectedBy ?? r.rejected_by ?? null,
+    rejectedAt: r.rejectedAt ?? r.rejected_at ?? null,
+    reason: r.reason ?? null,
+    tracking: parseTracking(r.tracking),
   };
 }
 
@@ -383,6 +455,25 @@ export async function updateBookingStatusAsync(id: string, status: BookingStatus
   } else {
     await setBookingStatus(id, status);
   }
+}
+
+export async function approveBookingAsync(id: string): Promise<{ studentId?: number }> {
+  if (apiMode) {
+    const data = await api.put<{ ok: boolean; studentId?: number }>(`/bookings/${id}/approve`);
+    notify();
+    return { studentId: data.studentId };
+  }
+  await approveBookingRecord(id);
+  return {};
+}
+
+export async function rejectBookingAsync(id: string, reason: string): Promise<void> {
+  if (apiMode) {
+    await api.put(`/bookings/${id}/reject`, { reason });
+    notify();
+    return;
+  }
+  await setBookingStatus(id, "rejected");
 }
 
 export async function loadHostelRooms(hostelId: number): Promise<RoomBeds[]> {

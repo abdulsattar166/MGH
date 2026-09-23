@@ -78,6 +78,15 @@ export default function Rooms() {
     }
   };
 
+  const handleRoomImageUpdate = async (room: RoomView, url: string) => {
+    setActionError("");
+    try {
+      await editRoom(room.dbId, { image_url: url });
+    } catch (e) {
+      setActionError((e as Error).message);
+    }
+  };
+
   const handleSaveRoom = async (data: RoomFormValues) => {
     setActionError("");
     try {
@@ -256,6 +265,7 @@ export default function Rooms() {
                       room={room}
                       onAssign={(r, b) => setAssignment({ room: r, bed: b })}
                       onViewStudent={(sid) => navigate(`/manage/students/${sid}`)}
+                      onRoomImageUpdate={handleRoomImageUpdate}
                       onToggleMaintenance={handleToggleMaintenance}
                       onEdit={(r) => setRoomModal({ open: true, editing: r })}
                       onDelete={(r) => setDeleting(r)}

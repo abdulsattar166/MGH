@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS students (
 
 -- ---------------------------------------------------------------------------
 -- fees — monthly fee records per student
+--   status: 'approved' (generated) / 'fetched' (collected) / 'unfetched' (due)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS fees (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -93,7 +94,12 @@ CREATE TABLE IF NOT EXISTS fees (
   paid       TINYINT(1)   NOT NULL DEFAULT 0,
   paid_at    VARCHAR(20)  NULL,
   method     VARCHAR(50)  NULL,
+  status     VARCHAR(20)  NOT NULL DEFAULT 'approved',
+  reference  VARCHAR(40)  NULL,
+  collected_by VARCHAR(255) NULL,
+  remarks    VARCHAR(500) NULL,
   created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP    NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_fees_student_month (student_id, month),
   KEY idx_fees_month (month)
@@ -136,7 +142,7 @@ CREATE TABLE IF NOT EXISTS visitors (
 -- bookings — public room booking requests (replaces localStorage demo store)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS bookings (
-  id          VARCHAR(20)  NOT NULL,         -- e.g. BK-2026-0001
+  id          VARCHAR(20)  NOT NULL,         -- tracking id e.g. MGH-2026-000184
   hostel_id   INT UNSIGNED NOT NULL,
   hostel_name VARCHAR(255) NOT NULL DEFAULT '',
   room_label  VARCHAR(20)  NOT NULL,
@@ -145,10 +151,20 @@ CREATE TABLE IF NOT EXISTS bookings (
   bed_number  INT          NOT NULL,
   status      VARCHAR(20)  NOT NULL DEFAULT 'pending',
   applicant   JSON         NOT NULL,
+  warden_id   INT UNSIGNED NULL,
+  fee_amount  INT          NOT NULL DEFAULT 0,
+  approved_by VARCHAR(255) NULL,
+  approved_at VARCHAR(30)  NULL,
+  rejected_by VARCHAR(255) NULL,
+  rejected_at VARCHAR(30)  NULL,
+  reason      VARCHAR(500) NULL,
+  tracking    JSON         NULL,
   created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP    NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_bookings_hostel (hostel_id),
-  KEY idx_bookings_status (status)
+  KEY idx_bookings_status (status),
+  KEY idx_bookings_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------
@@ -356,3 +372,51 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   PRIMARY KEY (id),
   KEY idx_audit_logs_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- notifications — in-app notifications behind the bell icon
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notifications (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id    INT UNSIGNED NOT NULL,
+  type       VARCHAR(50)  NOT NULL DEFAULT 'info',   -- booking | fee | attendance | complaint | improvement | system
+  title      VARCHAR(255) NOT NULL DEFAULT '',
+  message    TEXT         NULL,
+  link       VARCHAR(255) NULL,
+  data       JSON         NULL,
+  is_read    TINYINT(1)   NOT NULL DEFAULT 0,
+  created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_notifications_user (user_id),
+  KEY idx_notifications_read (user_id, is_read)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- improvements — student improvement / suggestion submissions
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS improvements (
+  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  code         VARCHAR(30)  NOT NULL,
+  student_name VARCHAR(255) NULL,
+  hostel_id    INT UNSIGNED NULL,
+  warden_id    INT UNSIGNED NULL,
+  category     VARCHAR(50)  NOT NULL DEFAULT 'Other',
+  subject      VARCHAR(255) NOT NULL DEFAULT '',
+  description  TEXT         NOT NULL,
+  status       VARCHAR(30)  NOT NULL DEFAULT 'Submitted',
+  remarks      TEXT         NULL,
+  created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at   TIMESTAMP    NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_improvements_code (code),
+  KEY idx_improvements_hostel (hostel_id),
+  KEY idx_improvements_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------------
+-- Uploaded image columns (drag & drop uploads stored via the uploads API)
+--   hostels.image_url, users.avatar_url and students.image_url already exist;
+--   hostel_rooms.image_url is the per-room photo.
+-- ---------------------------------------------------------------------------
+-- ALTER TABLE hostel_rooms ADD COLUMN image_url VARCHAR(500) NULL;
+-- ALTER TABLE students ADD COLUMN image_url VARCHAR(500) NULL;

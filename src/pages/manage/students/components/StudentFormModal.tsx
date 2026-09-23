@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Student } from "@/mocks/management/students";
 import { useHostels } from "@/hooks/useHostels";
 import { roomTypes } from "@/mocks/management/rooms";
+import ImageUpload from "@/pages/manage/components/ImageUpload";
 
 type Props = {
   open: boolean;
@@ -26,6 +27,7 @@ const emptyForm: Record<string, string> = {
   joinDate: "",
   monthlyFee: "",
   status: "Active",
+  imageUrl: "",
 };
 
 const inputClass =
@@ -80,6 +82,7 @@ export default function StudentFormModal({
         joinDate: initial.joinDate,
         monthlyFee: String(initial.monthlyFee),
         status: initial.status,
+        imageUrl: initial.imageUrl ?? "",
       });
     } else {
       setForm({
@@ -116,6 +119,7 @@ export default function StudentFormModal({
       joinDate: form.joinDate || new Date().toISOString().slice(0, 10),
       monthlyFee: Number(form.monthlyFee) || 0,
       status: form.status as Student["status"],
+      imageUrl: form.imageUrl,
     });
   };
 
@@ -142,6 +146,11 @@ export default function StudentFormModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <ImageUpload
+            label="Student Photo"
+            value={form.imageUrl}
+            onChange={(url) => set("imageUrl", url ?? "")}
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Full Name" required>
               <input

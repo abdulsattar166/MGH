@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useReports } from "@/hooks/useReports";
 import { useHostels } from "@/hooks/useHostels";
+import { apiBaseUrl, apiMode, getToken } from "@/lib/api";
 import { COMPLAINT_STATUSES } from "@/lib/complaints";
 import StatCard from "@/pages/manage/dashboard/components/StatCard";
 import DataState from "@/pages/manage/components/DataState";
@@ -16,6 +17,8 @@ export default function Reports() {
   const [status, setStatus] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
 
   const filters = useMemo(
     () => ({
@@ -39,17 +42,80 @@ export default function Reports() {
     setTo("");
   };
 
+  const downloadPdf = async () => {
+    setDownloadError("");
+    if (!apiMode) {
+      window.print();
+      return;
+    }
+    setDownloading(true);
+    try {
+      const params = new URLSearchParams();
+      if (hostelId) params.set("hostelId", String(hostelId));
+      if (wardenId) params.set("wardenId", wardenId);
+      if (status) params.set("status", status);
+      if (from) params.set("from", new Date(`${from}T00:00:00`).toISOString());
+      if (to) params.set("to", new Date(`${to}T23:59:59`).toISOString());
+      const url = `${apiBaseUrl}/reports/pdf?${params.toString()}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${getToken() ?? ""}` },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = "Could not generate the PDF.";
+        try {
+          msg = (JSON.parse(text) as { error?: string }).error ?? msg;
+        } catch { /* keep default */ }
+        throw new Error(msg);
+      }
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `MGH-Report-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (e) {
+      setDownloadError((e as Error).message);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-heading text-xl font-bold text-foreground-950">Reports</h2>
-        <p className="text-sm text-foreground-600 mt-1">
-          Live figures from the database
-          {data?.generatedAt
-            ? ` · updated ${new Date(data.generatedAt).toLocaleTimeString()}`
-            : ""}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h2 className="font-heading text-xl font-bold text-foreground-950">Reports</h2>
+          <p className="text-sm text-foreground-600 mt-1">
+            Live figures from the database
+            {data?.generatedAt
+              ? ` · updated ${new Date(data.generatedAt).toLocaleTimeString()}`
+              : ""}
+          </p>
+        </div>
+        <button
+          onClick={() => void downloadPdf()}
+          disabled={downloading}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-primary-500 hover:bg-primary-600 text-background-50 text-sm font-semibold whitespace-nowrap cursor-pointer transition disabled:opacity-60"
+        >
+          {downloading ? (
+            <i className="ri-loader-4-line animate-spin"></i>
+          ) : (
+            <i className="ri-file-pdf-2-line"></i>
+          )}
+          Download A4 PDF Report
+        </button>
       </div>
+
+      {downloadError && (
+        <div className="bg-accent-50 border border-accent-200 text-accent-900 rounded-md px-4 py-3 text-sm">
+          <i className="ri-error-warning-line mr-1.5"></i>
+          {downloadError}
+        </div>
+      )}
 
       <div className="bg-background-50 border border-background-200 rounded-lg p-4">
         <div className="flex flex-wrap items-end gap-3">
@@ -133,6 +199,14 @@ export default function Reports() {
               <StatCard label="Total Complaints" value={String(s.totalComplaints)} icon="ri-tools-line" tone="accent" sub={`${s.pendingComplaints} pending · ${s.resolvedComplaints} resolved`} />
             </div>
 
+            {/* Fee & booking summary */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <StatCard label="Fee Collected" value={`PKR ${(s.feeCollected / 1000).toFixed(0)}K`} icon="ri-check-double-line" tone="primary" sub={`${s.paidStudents} students paid`} />
+              <StatCard label="Fee Pending" value={`PKR ${(s.feePending / 1000).toFixed(0)}K`} icon="ri-time-line" tone="accent" sub={`${s.pendingFeeStudents} students due`} />
+              <StatCard label="Collection Rate" value={`${s.collectionRate}%`} icon="ri-pie-chart-line" tone="secondary" sub={`${s.totalBookings} bookings`} />
+              <StatCard label="Suggestions" value={String(s.totalImprovements)} icon="ri-lightbulb-line" tone="accent" sub={`${s.improvementsImplemented} implemented`} />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Complaints by status */}
               <div className="bg-background-50 border border-background-200 rounded-lg p-5">
@@ -173,6 +247,72 @@ export default function Reports() {
                     ))}
                   </ul>
                 )}
+              </div>
+            </div>
+
+            {/* Fee collection + bookings + improvements */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="bg-background-50 border border-background-200 rounded-lg p-5">
+                <h3 className="font-heading text-base font-bold text-foreground-950 mb-4">Fee Collection</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "Collected (fetched)", value: s.feeCollected, cls: "text-primary-700" },
+                    { label: "Pending", value: s.feePending, cls: "text-accent-700" },
+                    { label: "Overdue (unfetched)", value: s.feeOverdue, cls: "text-accent-600" },
+                    { label: "Total expected", value: s.feeTotal, cls: "text-foreground-900" },
+                  ].map((r) => (
+                    <div key={r.label} className="flex items-center justify-between text-sm">
+                      <span className="text-foreground-600">{r.label}</span>
+                      <span className={`font-semibold ${r.cls}`}>PKR {r.value.toLocaleString()}</span>
+                    </div>
+                  ))}
+                  <div className="pt-2 border-t border-background-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-foreground-600">Collection Percentage</span>
+                      <span className="font-bold text-primary-700">{s.collectionRate}%</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-background-200 overflow-hidden">
+                      <div className="h-full bg-primary-500" style={{ width: `${s.collectionRate}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-background-50 border border-background-200 rounded-lg p-5">
+                <h3 className="font-heading text-base font-bold text-foreground-950 mb-4">Booking Statistics</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "Total bookings", value: s.totalBookings, cls: "text-foreground-900" },
+                    { label: "Pending / review", value: s.pendingBookings, cls: "text-accent-700" },
+                    { label: "Approved", value: s.approvedBookings, cls: "text-primary-700" },
+                    { label: "Rejected", value: s.rejectedBookings, cls: "text-secondary-700" },
+                    { label: "Cancelled", value: s.cancelledBookings, cls: "text-foreground-500" },
+                    { label: "Completed", value: s.completedBookings, cls: "text-primary-700" },
+                  ].map((r) => (
+                    <div key={r.label} className="flex items-center justify-between text-sm">
+                      <span className="text-foreground-600">{r.label}</span>
+                      <span className={`font-semibold ${r.cls}`}>{r.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-background-50 border border-background-200 rounded-lg p-5">
+                <h3 className="font-heading text-base font-bold text-foreground-950 mb-4">Improvements &amp; Suggestions</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "Total suggestions", value: s.totalImprovements, cls: "text-foreground-900" },
+                    { label: "Under review", value: s.improvementsReviewing, cls: "text-accent-700" },
+                    { label: "Accepted", value: s.improvementsAccepted, cls: "text-secondary-700" },
+                    { label: "Implemented", value: s.improvementsImplemented, cls: "text-primary-700" },
+                    { label: "Rejected", value: s.improvementsRejected, cls: "text-foreground-500" },
+                  ].map((r) => (
+                    <div key={r.label} className="flex items-center justify-between text-sm">
+                      <span className="text-foreground-600">{r.label}</span>
+                      <span className={`font-semibold ${r.cls}`}>{r.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -230,9 +370,10 @@ export default function Reports() {
                         <th className="text-left font-semibold px-5 py-3">Position</th>
                         <th className="text-left font-semibold px-5 py-3">Assigned Hostel</th>
                         <th className="text-right font-semibold px-5 py-3">Students</th>
+                        <th className="text-right font-semibold px-5 py-3">Fees Collected</th>
                         <th className="text-right font-semibold px-5 py-3">Complaints</th>
-                        <th className="text-right font-semibold px-5 py-3">Pending</th>
                         <th className="text-right font-semibold px-5 py-3">Resolved</th>
+                        <th className="text-right font-semibold px-5 py-3">Suggestions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-background-100">
@@ -242,9 +383,12 @@ export default function Reports() {
                           <td className="px-5 py-3 text-foreground-600 whitespace-nowrap">{w.position}</td>
                           <td className="px-5 py-3 text-foreground-600 whitespace-nowrap">{w.hostel ?? "Unassigned"}</td>
                           <td className="px-5 py-3 text-right text-foreground-900">{w.students}</td>
+                          <td className="px-5 py-3 text-right text-primary-700 font-medium">
+                            PKR {(w.feeCollected ?? 0).toLocaleString()}
+                          </td>
                           <td className="px-5 py-3 text-right text-foreground-900">{w.complaints}</td>
-                          <td className="px-5 py-3 text-right text-accent-700">{w.pending}</td>
                           <td className="px-5 py-3 text-right text-primary-700">{w.resolved}</td>
+                          <td className="px-5 py-3 text-right text-foreground-900">{w.improvements ?? 0}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { fetchBookingRecords } from "@/lib/bookingsDb";
+import { loadBookings } from "@/lib/booking";
+import { apiMode } from "@/lib/api";
 import type { Booking } from "@/lib/booking";
 
 export function useBookings() {
@@ -10,7 +11,7 @@ export function useBookings() {
 
   const reload = useCallback(async () => {
     try {
-      const data = await fetchBookingRecords();
+      const data = await loadBookings();
       setBookings(data);
       setError("");
     } catch (e) {
@@ -24,8 +25,13 @@ export function useBookings() {
   useEffect(() => {
     void reload();
 
-    // Live-refresh the list whenever a booking row changes (new submission,
-    // approve, reject, etc.).
+    if (apiMode) {
+      // Poll lightly so the dashboard stays fresh without a websocket layer.
+      const timer = window.setInterval(() => void reload(), 30000);
+      return () => window.clearInterval(timer);
+    }
+
+    // Supabase live-refresh when a booking row changes.
     const channel = supabase
       .channel("bookings-changes")
       .on(

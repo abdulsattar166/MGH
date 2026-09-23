@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useHostels } from "@/hooks/useHostels";
 import type { ManagedWarden } from "@/lib/wardens";
+import ImageUpload from "@/pages/manage/components/ImageUpload";
 
 export type WardenFormValues = {
   name: string;
@@ -103,11 +104,11 @@ export default function WardenFormModal({ mode, warden, saving, error, onSubmit,
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground-800 mb-1.5">Profile Photo URL</label>
-            <input value={values.avatarUrl} onChange={(e) => set({ avatarUrl: e.target.value })} className={inputClass} placeholder="https://…" />
-            <p className="text-xs text-foreground-500 mt-1">
-              Paste a hosted image URL for the warden's photo.
-            </p>
+            <ImageUpload
+              label="Profile Photo"
+              value={values.avatarUrl}
+              onChange={(url) => set({ avatarUrl: url ?? "" })}
+            />
           </div>
           {mode === "create" && (
             <div>

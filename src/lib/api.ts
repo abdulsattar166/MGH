@@ -13,6 +13,9 @@ const API_URL = (import.meta.env.VITE_PUBLIC_API_URL as string | undefined)?.rep
 
 export const apiMode = Boolean(API_URL);
 
+// Origin used to resolve relative uploaded-image URLs returned by the backend.
+export const apiBaseUrl = API_URL ?? "";
+
 const TOKEN_KEY = "mubarak_api_token";
 
 export function getToken(): string | null {
@@ -83,3 +86,49 @@ export const api = {
     }),
   del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
 };
+
+// Upload a file as multipart/form-data. Returns the stored URL.
+export async function uploadFile(file: File): Promise<string> {
+  if (!apiMode) {
+    // Supabase mode falls back to a data URL preview (frontend demo).
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  }
+  const form = new FormData();
+  form.append("file", file);
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${apiBaseUrl}/uploads`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+  const text = await res.text();
+  let data: unknown = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+  if (!res.ok) {
+    const msg = (data as { error?: string } | null)?.error || "Could not upload this image.";
+    throw new ApiError(msg);
+  }
+  return (data as { url?: string }).url ?? "";
+}
+
+// Resolve a possibly-relative image path (uploaded files) to a usable URL.
+export function resolveImageUrl(src: string | null | undefined): string | null {
+  if (!src) return null;
+  if (/^https?:\/\//.test(src)) return src;
+  if (src.startsWith("data:")) return src;
+  if (apiMode && src.startsWith("/uploads")) return `${apiBaseUrl}${src}`;
+  return src;
+}

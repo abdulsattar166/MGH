@@ -15,8 +15,8 @@ const ADMINS = [
   },
   {
     name: "Mubarak Mehdi",
-    email: "mubarakmehdi@admin.com",
-    password: "mubarakhostels@12345",
+    email: "mubarakgroupofhostels@gmail.com",
+    password: "mubarakgroupofhostels1122",
     position: "Founder & CEO",
   },
 ];

@@ -8,8 +8,8 @@ const SUPER_ADMINS = [
     position: "Super Admin",
   },
   {
-    email: "mubarakmehdi@admin.com",
-    password: "mubarakhostels@12345",
+    email: "mubarakgroupofhostels@gmail.com",
+    password: "mubarakgroupofhostels1122",
     name: "Mubarak Mehdi",
     position: "Founder & CEO",
   },

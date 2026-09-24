@@ -34,7 +34,7 @@ whole project can run against **your own MySQL server**.
 
    Default super admins:
    - `abdulsattar1717asm@gmail.com` / `Admin@12345`
-   - `mubarakmehdi@admin.com` / `mubarakhostels@12345`
+   - `mubarakgroupofhostels@gmail.com` / `mubarakgroupofhostels1122`
 
    (You can edit `scripts/seedAdmin.js` before running if you want different
    credentials.)

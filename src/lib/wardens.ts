@@ -40,6 +40,7 @@ export async function createWarden(payload: {
   phone?: string;
   hostelId?: number | null;
   role?: string;
+  position?: string;
   avatarUrl?: string | null;
 }): Promise<void> {
   await call("create", { ...payload });

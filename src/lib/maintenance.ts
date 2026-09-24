@@ -1,26 +1,14 @@
 import { api, apiMode } from "@/lib/api";
-import { allRoomLabels, roomCapacityForLabel } from "@/lib/roomCatalog";
 
 export type MaintenanceBed = {
   room: string;
   bed: number;
 };
 
-function isMaintenance(label: string, bed: number): boolean {
-  const last = Number(label.charAt(label.length - 1));
-  return (last + bed) % 5 === 0;
-}
-
-// Synchronous fallback (live mode) — deterministic mock maintenance.
+// No fabricated maintenance: every bed starts available. Real maintenance is
+// tracked in the database and loaded via loadMaintenance().
 export function buildMaintenance(): MaintenanceBed[] {
-  const out: MaintenanceBed[] = [];
-  for (const label of allRoomLabels()) {
-    const capacity = roomCapacityForLabel(label);
-    for (let b = 1; b <= capacity; b++) {
-      if (isMaintenance(label, b)) out.push({ room: label, bed: b });
-    }
-  }
-  return out;
+  return [];
 }
 
 export async function loadMaintenance(hostelId: number): Promise<MaintenanceBed[]> {

@@ -1,7 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const SUPER_ADMIN_EMAIL = "abdulsattar1717asm@gmail.com";
-const SUPER_ADMIN_PASSWORD = "Admin@12345";
+const SUPER_ADMIN_EMAIL = "mubarikmehdi@admin.com";
+const SUPER_ADMIN_PASSWORD = "admin@12345";
+const SUPER_ADMIN_NAME = "Mubarak Mehdi";
 
 Deno.serve(async (req) => {
   const json = (body: unknown) =>
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
     email: SUPER_ADMIN_EMAIL,
     password: SUPER_ADMIN_PASSWORD,
     email_confirm: true,
-    user_metadata: { name: "Super Admin" },
+    user_metadata: { name: SUPER_ADMIN_NAME },
   });
   if (createErr) return json({ error: createErr.message });
 
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
   if (id) {
     await admin
       .from("profiles")
-      .update({ role: "admin", email: SUPER_ADMIN_EMAIL, name: "Super Admin" })
+      .update({ role: "admin", email: SUPER_ADMIN_EMAIL, name: SUPER_ADMIN_NAME })
       .eq("id", id);
   }
 

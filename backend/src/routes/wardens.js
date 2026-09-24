@@ -71,6 +71,7 @@ router.post("/manage", async (req, res) => {
       const hostelId = req.body.hostelId ? Number(req.body.hostelId) : null;
       const role = req.body.role === "superintendent" ? "superintendent" : "warden";
       const avatarUrl = req.body.avatarUrl ? String(req.body.avatarUrl) : null;
+      const position = req.body.position ? String(req.body.position).trim() : "";
       if (!email || !name || password.length < 6) {
         return res.status(400).json({
           error: "Please provide a name, a valid email and a password of at least 6 characters.",
@@ -91,7 +92,7 @@ router.post("/manage", async (req, res) => {
           hostelId,
           phone,
           avatarUrl,
-          role === "superintendent" ? "Superintendent" : "Warden",
+          position || (role === "superintendent" ? "Superintendent" : "Warden"),
         ]
       );
       return res.status(201).json({ ok: true, userId: String(result.insertId) });

@@ -7,9 +7,9 @@ dotenv.config();
 // Default admin account. Change these to your own before running, or update
 // them later via the admin panel.
 const ADMIN = {
-  name: "Super Admin",
-  email: "abdulsattar1717asm@gmail.com",
-  password: "Admin@12345",
+  name: "Mubarak Mehdi",
+  email: "mubarikmehdi@admin.com",
+  password: "admin@12345",
 };
 
 async function main() {

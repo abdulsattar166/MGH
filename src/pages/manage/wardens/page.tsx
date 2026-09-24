@@ -66,6 +66,7 @@ export default function WardensPage() {
           phone: values.phone.trim() || undefined,
           hostelId: values.hostelId ? Number(values.hostelId) : null,
           role: values.role,
+          position: values.position.trim() || undefined,
           avatarUrl: values.avatarUrl.trim() || null,
         });
         flash("Warden account created successfully.");

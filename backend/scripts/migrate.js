@@ -74,9 +74,6 @@ async function main() {
     [1, "https://readdy.ai/api/search-image?query=Modern%20five%20storey%20student%20hostel%20building%20exterior%20with%20warm%20cream%20facade%20and%20sage%20green%20accent%20details%2C%20clean%20minimal%20residential%20architecture%2C%20manicured%20landscaped%20entrance%20with%20lush%20green%20plants%20and%20trees%2C%20warm%20golden%20hour%20sunlight%2C%20clear%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&seq=hostel-01-jinnah&orientation=landscape"],
     [2, "https://readdy.ai/api/search-image?query=Contemporary%20student%20hostel%20building%20exterior%20with%20warm%20beige%20facade%20and%20modern%20windows%2C%20four%20storey%20clean%20residential%20architecture%2C%20tidy%20landscaped%20front%20garden%20with%20green%20shrubs%20and%20pathway%2C%20soft%20warm%20morning%20light%2C%20bright%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&seq=hostel-02-sama&orientation=landscape"],
     [3, "https://readdy.ai/api/search-image?query=Elegant%20student%20hostel%20residence%20exterior%20with%20warm%20sandstone%20facade%20and%20balcony%20railings%2C%20modern%20clean%20architecture%20with%20large%20windows%2C%20neat%20entrance%20with%20potted%20plants%20and%20green%20landscaping%2C%20warm%20late%20afternoon%20golden%20light%2C%20clear%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&seq=hostel-03-abdulqadir&orientation=landscape"],
-    [4, "https://readdy.ai/api/search-image?query=Upscale%20modern%20girls%20student%20hostel%20building%20in%20a%20gated%20community%2C%20warm%20cream%20exterior%20with%20elegant%20design%20details%2C%20landscaped%20gardens%20with%20manicured%20hedges%20and%20flowers%2C%20soft%20warm%20evening%20light%2C%20premium%20architectural%20photography%2C%20luxurious%20yet%20welcoming%20student%20residence&width=1000&height=700&seq=hostel-04-dha&orientation=landscape"],
-    [5, "https://readdy.ai/api/search-image?query=Comfortable%20modern%20student%20hostel%20building%20with%20warm%20beige%20exterior%20and%20neat%20balconies%2C%20family%20friendly%20residential%20neighborhood%20setting%20with%20green%20trees%20and%20clean%20streets%2C%20soft%20warm%20daylight%2C%20clear%20sky%2C%20professional%20architectural%20photography%2C%20safe%20premium%20student%20accommodation&width=1000&height=700&seq=hostel-05-wapda&orientation=landscape"],
-    [6, "https://readdy.ai/api/search-image?query=Modern%20gated%20student%20hostel%20building%20in%20a%20well%20planned%20community%2C%20warm%20cream%20facade%20with%20contemporary%20architectural%20lines%2C%20wide%20clean%20roads%20and%20green%20parks%20nearby%2C%20bright%20warm%20sunlight%2C%20blue%20sky%2C%20professional%20architectural%20photography%2C%20premium%20secure%20student%20living&width=1000&height=700&seq=hostel-06-bahria&orientation=landscape"],
   ];
   for (const [hid, img] of HOSTEL_IMAGES) {
     await conn.query(
@@ -276,69 +273,9 @@ async function main() {
     console.log("  seeded hostel_beds");
   }
 
-  if (hostelsCount > 0 && (await tableIsEmpty(conn, "room_allocations"))) {
-    try {
-      await conn.query(`
-        INSERT INTO room_allocations (student_id, room_id, bed_id)
-        SELECT s.id, hr.id, hb.id
-        FROM students s
-        JOIN hostel_rooms hr ON hr.hostel_id = s.hostel_id AND hr.room_number = s.room
-        JOIN hostel_beds hb ON hb.room_id = hr.id AND hb.bed_number = s.bed
-        WHERE s.status != 'Left' AND s.room != '' AND s.room IS NOT NULL`);
-      console.log("  seeded room_allocations");
-    } catch (err) {
-      console.log(`  room_allocations seed skipped: ${err.message}`);
-    }
-  }
-
-  // Carry the legacy maintenance rows over to the bed grid.
-  const hasMaintCol = await tableHasColumn(conn, "hostel_beds", "is_maintenance");
-  if (hasMaintCol && (await tableExists(conn, "maintenance"))) {
-    await conn.query(`
-      UPDATE hostel_beds hb
-      JOIN hostel_rooms hr ON hr.id = hb.room_id
-      JOIN maintenance m ON m.hostel_id = hr.hostel_id AND m.room_label = hr.room_number AND m.bed = hb.bed_number
-      SET hb.is_maintenance = 1`);
-    console.log("  carried maintenance rows into hostel_beds");
-  }
-
-  if (hostelsCount > 0 && (await tableIsEmpty(conn, "notices"))) {
-    try {
-      await conn.query(`INSERT INTO notices (hostel_id, title, body, author_name, is_pinned, expires_at) VALUES
-        (1, 'Monthly mess payment due', 'Please clear your monthly mess payment by the 10th.', 'Super Admin', 1, '2026-12-31'),
-        (2, 'Power maintenance this Sunday', 'Electricians will be working between 10 AM and 2 PM on Sunday.', 'Super Admin', 0, '2026-10-31')`);
-      console.log("  seeded notices");
-    } catch (err) {
-      console.log(`  notices seed skipped: ${err.message}`);
-    }
-  }
-
-  if (await tableIsEmpty(conn, "complaints")) {
-    try {
-      const [students] = await conn.query("SELECT id, name, cnic, hostel_id, room FROM students LIMIT 3");
-      const rows = students.map((s, i) => [
-        `CMP-2026-${String(i + 1).padStart(4, "0")}`,
-        s.id,
-        s.name,
-        s.cnic,
-        s.hostel_id,
-        s.room,
-        i === 0 ? "Electrical" : "Plumbing",
-        i === 0 ? "The tube light flickers at night." : "A small repair is needed.",
-        "Normal",
-      ]);
-      for (const r of rows) {
-        await conn.query(
-          `INSERT INTO complaints (code, student_id, student_name, student_code, hostel_id, room, category, description, priority, status)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
-          r
-        );
-      }
-      console.log("  seeded complaints");
-    } catch (err) {
-      console.log(`  complaints seed skipped: ${err.message}`);
-    }
-  }
+  // No demo data is seeded: rooms and beds are created empty and fully
+  // available so the project starts fresh. Students, fees, attendance,
+  // bookings, complaints and notices are added by the user through the app.
 
   conn.release();
   await pool.end();

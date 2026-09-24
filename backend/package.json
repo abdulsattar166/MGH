@@ -8,6 +8,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "seed-admin": "node scripts/seedAdmin.js",
+    "seed-wardens": "node scripts/seedHostelAdmins.js",
+    "reset": "node scripts/reset.js",
     "migrate": "node scripts/migrate.js"
   },
   "dependencies": {

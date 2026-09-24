@@ -137,10 +137,10 @@ export default function Hostels() {
               Our Hostels
             </span>
             <h1 className="font-heading text-4xl md:text-6xl font-bold text-background-50 mt-2">
-              Six locations. One promise of comfort.
+              Comfort in every location.
             </h1>
             <p className="mt-3 text-background-200 max-w-xl">
-              Explore each of our hostels across Lahore and find the one closest to your university.
+              Explore each of our hostels across Rawalpindi and find the one closest to your university.
             </p>
           </div>
         </div>

@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
       const hostelId = body.hostelId ? Number(body.hostelId) : null;
       const role = body.role === "superintendent" ? "superintendent" : "warden";
       const avatarUrl = body.avatarUrl ? String(body.avatarUrl) : null;
+      const position = body.position ? String(body.position).trim() : "";
       if (!email || !name || password.length < 6) {
         return json(
           { error: "Please provide a name, a valid email and a password of at least 6 characters." },
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
         phone,
         hostel_id: hostelId,
         avatar_url: avatarUrl,
-        position: role === "warden" ? "Warden" : "Superintendent",
+        position: position || (role === "warden" ? "Warden" : "Superintendent"),
         is_active: true,
         must_change_password: true,
       });

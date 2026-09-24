@@ -1,11 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPER_ADMIN = {
-  name: "Super Admin",
-  email: "abdulsattar1717asm@gmail.com",
-  password: "Admin@12345",
+  name: "Mubarak Mehdi",
+  email: "mubarikmehdi@admin.com",
+  password: "admin@12345",
   role: "admin",
-  position: "Super Admin",
+  position: "Founder & CEO",
 };
 
 const SUPERINTENDENT = {
@@ -26,6 +26,7 @@ const HOSTEL_ADMINS = [
     password: "jinnah12",
     phone: "03419715017",
     hostelId: 1,
+    position: "Warden, Jinnah Boys House",
     avatarUrl: "https://static.readdy.ai/image/773d73dcd4bfe3b3ab546a821d990052/8f6a18793fdfdc4a44c7458f6edc225e.png",
   },
   {
@@ -34,6 +35,7 @@ const HOSTEL_ADMINS = [
     password: "sama123",
     phone: "03105948138",
     hostelId: 2,
+    position: "Warden, Sama Boys House",
     avatarUrl: "https://static.readdy.ai/image/773d73dcd4bfe3b3ab546a821d990052/975047ec2596c0f071aabe1219285608.png",
   },
   {
@@ -42,31 +44,8 @@ const HOSTEL_ADMINS = [
     password: "qadeer1234",
     phone: "03045889984",
     hostelId: 3,
+    position: "Warden, Abdul Qadeer Boys House",
     avatarUrl: "https://static.readdy.ai/image/773d73dcd4bfe3b3ab546a821d990052/ac895ff6c5b9f7bc513e57b688cb7400.jpeg",
-  },
-  {
-    name: "Arslan Tariq",
-    email: "admin.dha@mubarakhostels.pk",
-    password: "admin4dha",
-    phone: "03000000004",
-    hostelId: 4,
-    avatarUrl: PLACEHOLDER_AVATAR,
-  },
-  {
-    name: "Zeeshan Ali",
-    email: "admin.wapda@mubarakhostels.pk",
-    password: "admin5wapda",
-    phone: "03000000005",
-    hostelId: 5,
-    avatarUrl: PLACEHOLDER_AVATAR,
-  },
-  {
-    name: "Taimoor Shah",
-    email: "admin.bahria@mubarakhostels.pk",
-    password: "admin6bahria",
-    phone: "03000000006",
-    hostelId: 6,
-    avatarUrl: PLACEHOLDER_AVATAR,
   },
 ];
 
@@ -141,7 +120,7 @@ Deno.serve(async (_req) => {
     results.push("OK: " + (await ensureUser(SUPER_ADMIN)));
     results.push("OK: " + (await ensureUser(SUPERINTENDENT)));
     for (const w of HOSTEL_ADMINS) {
-      results.push("OK: " + (await ensureUser({ ...w, role: "warden", position: "Hostel Admin" })));
+      results.push("OK: " + (await ensureUser({ ...w, role: "warden" })));
     }
 
     // Re-point complaints to their hostel's hostel admin.

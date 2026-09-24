@@ -1,8 +1,13 @@
 import { Link } from "react-router-dom";
 import { useHostelsFull } from "@/hooks/useHostelsFull";
+import { useWardens } from "@/hooks/useWardens";
 
 export default function Hostels() {
   const { hostels, loading, error, reload } = useHostelsFull();
+  const { wardens } = useWardens();
+
+  const wardenFor = (hostelId: number) =>
+    wardens.find((w) => w.hostelId === hostelId) ?? null;
 
   return (
     <section id="hostels" className="py-24 px-4 md:px-8 bg-background-50">
@@ -13,12 +18,14 @@ export default function Hostels() {
               Our Hostels
             </span>
             <h2 className="font-heading text-3xl md:text-5xl font-bold text-foreground-950 mt-3">
-              Six locations. One promise of comfort.
+              {loading || hostels.length === 0
+                ? "Comfort in every location."
+                : `${hostels.length} location${hostels.length > 1 ? "s" : ""}. One promise of comfort.`}
             </h2>
           </div>
           <p className="text-foreground-600 max-w-md">
-            Handpicked neighborhoods across Rawalpindi &amp; Lahore — close to major universities,
-            markets and transport hubs.
+            Handpicked neighborhoods across Rawalpindi — close to major universities, markets and
+            transport hubs.
           </p>
         </div>
 
@@ -43,7 +50,9 @@ export default function Hostels() {
           </div>
         ) : (
           <div className="mt-14 grid md:grid-cols-2 lg:grid-cols-3 gap-6" data-product-shop>
-            {hostels.map((h) => (
+            {hostels.map((h) => {
+              const warden = wardenFor(h.id);
+              return (
               <article
                 key={h.id}
                 className="group bg-background-50 border border-background-200 rounded-2xl overflow-hidden hover:border-primary-300 transition-all"
@@ -102,6 +111,30 @@ export default function Hostels() {
                     ))}
                   </div>
 
+                  {warden && (
+                    <div className="mt-5 flex items-center gap-3 border-t border-background-200 pt-4">
+                      <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-secondary-500 text-background-50 flex items-center justify-center text-sm font-bold">
+                        {warden.avatarUrl ? (
+                          <img
+                            src={warden.avatarUrl}
+                            alt={warden.name}
+                            className="w-full h-full object-cover object-top"
+                          />
+                        ) : (
+                          warden.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-foreground-950 truncate">
+                          {warden.name}
+                        </div>
+                        <div className="text-xs text-foreground-500 truncate">
+                          {warden.position ?? "Warden"}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-6 flex gap-2">
                     <Link
                       to={`/hostel/${h.id}`}
@@ -118,7 +151,8 @@ export default function Hostels() {
                   </div>
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

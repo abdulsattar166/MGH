@@ -1,6 +1,16 @@
 -- ============================================================================
--- Mubarak Hostels — sample / demo data
--- Run this AFTER schema.sql so you have realistic data to test with.
+-- Mubarak Hostels — initial data
+-- Run this AFTER schema.sql.
+--
+-- This is a clean, production-ready starting point:
+--   * Three hostels only (Jinnah, Sama, Abdul Qadeer)
+--   * Rooms and beds created but EMPTY and fully available for booking
+--   * No demo students, fees, attendance, visitors, complaints, notices or
+--     audit logs — the project starts fresh.
+--
+-- The admin / warden accounts are created separately with hashed passwords:
+--   node backend/scripts/seedAdmin.js
+--   node backend/scripts/seedHostelAdmins.js
 -- ============================================================================
 
 USE mubarak_hostels;
@@ -11,53 +21,29 @@ USE mubarak_hostels;
 INSERT INTO hostels (id, name, gender, location) VALUES
   (1, 'Jinnah Hostel', 'boys', '6th Road, Rawalpindi'),
   (2, 'Sama Hostel', 'boys', '6th Road, Rawalpindi'),
-  (3, 'Abdul Qadir Hostel', 'boys', '6th Road, Rawalpindi'),
-  (4, 'Mubarak Hostel 04 — DHA Phase 5', 'girls', 'DHA Phase 5, Lahore'),
-  (5, 'Mubarak Hostel 05 — Wapda Town', 'girls', 'Wapda Town, Lahore'),
-  (6, 'Mubarak Hostel 06 — Bahria Town', 'girls', 'Bahria Town, Lahore');
+  (3, 'Abdul Qadeer Hostel', 'boys', '6th Road, Rawalpindi');
 
 UPDATE hostels SET
-  code = 'JH-1',  status = 'active', rooms = 50, beds = 165,
+  code = 'JH-1',  status = 'active', rooms = 50, beds = 173,
   phone = '051-1111111', email = 'jinnah@mubarakhostels.pk',
   image_url = 'https://readdy.ai/api/search-image?query=Modern%20five%20storey%20student%20hostel%20building%20exterior%20with%20warm%20cream%20facade%20and%20sage%20green%20accent%20details%2C%20clean%20minimal%20residential%20architecture%2C%20manicured%20landscaped%20entrance%20with%20lush%20green%20plants%20and%20trees%2C%20warm%20golden%20hour%20sunlight%2C%20clear%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Power Backup','24/7 Security','Study Hall'),
   description = 'Our flagship boys hostel on 6th Road, Rawalpindi with 50 rooms across 5 floors.'
 WHERE id = 1;
 UPDATE hostels SET
-  code = 'SH-2',  status = 'active', rooms = 50, beds = 165,
+  code = 'SH-2',  status = 'active', rooms = 50, beds = 173,
   phone = '051-2222222', email = 'sama@mubarakhostels.pk',
   image_url = 'https://readdy.ai/api/search-image?query=Contemporary%20student%20hostel%20building%20exterior%20with%20warm%20beige%20facade%20and%20modern%20windows%2C%20four%20storey%20clean%20residential%20architecture%2C%20tidy%20landscaped%20front%20garden%20with%20green%20shrubs%20and%20pathway%2C%20soft%20warm%20morning%20light%2C%20bright%20blue%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Gym','Garden'),
   description = 'Boys hostel focused on comfort and community living near educational institutions.'
 WHERE id = 2;
 UPDATE hostels SET
-  code = 'AQ-3',  status = 'active', rooms = 50, beds = 165,
-  phone = '051-3333333', email = 'abdulqadir@mubarakhostels.pk',
+  code = 'AQ-3',  status = 'active', rooms = 50, beds = 173,
+  phone = '051-3333333', email = 'abdulqadeer@mubarakhostels.pk',
   image_url = 'https://readdy.ai/api/search-image?query=Elegant%20student%20hostel%20residence%20exterior%20with%20warm%20sandstone%20facade%20and%20balcony%20railings%2C%20modern%20clean%20architecture%20with%20large%20windows%2C%20neat%20entrance%20with%20potted%20plants%20and%20green%20landscaping%2C%20warm%20late%20afternoon%20golden%20light%2C%20clear%20sky%2C%20professional%20architectural%20photography&width=1000&height=700&orientation=landscape',
   facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Library'),
   description = 'A well-managed boys hostel, minutes from the main university campuses.'
 WHERE id = 3;
-UPDATE hostels SET
-  code = 'MH-4',  status = 'active', rooms = 50, beds = 165,
-  phone = '042-4444444', email = 'dha@mubarakhostels.pk',
-  image_url = 'https://readdy.ai/api/search-image?query=Upscale%20modern%20girls%20student%20hostel%20building%20in%20a%20gated%20community%2C%20warm%20cream%20exterior%20with%20elegant%20design%20details%2C%20landscaped%20gardens%20with%20manicured%20hedges%20and%20flowers%2C%20soft%20warm%20evening%20light%2C%20premium%20architectural%20photography%2C%20luxurious%20yet%20welcoming%20student%20residence&width=1000&height=700&orientation=landscape',
-  facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Power Backup','24/7 Security'),
-  description = 'Girls hostel in DHA Phase 5, Lahore with a safe and secure environment.'
-WHERE id = 4;
-UPDATE hostels SET
-  code = 'MH-5',  status = 'active', rooms = 50, beds = 165,
-  phone = '042-5555555', email = 'wapda@mubarakhostels.pk',
-  image_url = 'https://readdy.ai/api/search-image?query=Comfortable%20modern%20student%20hostel%20building%20with%20warm%20beige%20exterior%20and%20neat%20balconies%2C%20family%20friendly%20residential%20neighborhood%20setting%20with%20green%20trees%20and%20clean%20streets%2C%20soft%20warm%20daylight%2C%20clear%20sky%2C%20professional%20architectural%20photography%2C%20safe%20premium%20student%20accommodation&width=1000&height=700&orientation=landscape',
-  facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Transport'),
-  description = 'Girls hostel in Wapda Town, Lahore close to universities and transport services.'
-WHERE id = 5;
-UPDATE hostels SET
-  code = 'MH-6',  status = 'active', rooms = 50, beds = 165,
-  phone = '042-6666666', email = 'bahria@mubarakhostels.pk',
-  image_url = 'https://readdy.ai/api/search-image?query=Modern%20gated%20student%20hostel%20building%20in%20a%20well%20planned%20community%2C%20warm%20cream%20facade%20with%20contemporary%20architectural%20lines%2C%20wide%20clean%20roads%20and%20green%20parks%20nearby%2C%20bright%20warm%20sunlight%2C%20blue%20sky%2C%20professional%20architectural%20photography%2C%20premium%20secure%20student%20living&width=1000&height=700&orientation=landscape',
-  facilities = JSON_ARRAY('Wi-Fi','Mess','Laundry','Gym','24/7 Security'),
-  description = 'Girls hostel in Bahria Town, Lahore with modern amenities.'
-WHERE id = 6;
 
 -- ---------------------------------------------------------------------------
 -- buildings & blocks (one building per hostel spanning the 5 catalog floors)
@@ -65,118 +51,27 @@ WHERE id = 6;
 INSERT INTO buildings (hostel_id, name, description, status) VALUES
   (1, 'Main Building', 'Five floors: Blocks A–E.', 'active'),
   (2, 'Main Building', 'Five floors: Blocks A–E.', 'active'),
-  (3, 'Main Building', 'Five floors: Blocks A–E.', 'active'),
-  (4, 'Main Building', 'Five floors: Blocks A–E.', 'active'),
-  (5, 'Main Building', 'Five floors: Blocks A–E.', 'active'),
-  (6, 'Main Building', 'Five floors: Blocks A–E.', 'active');
+  (3, 'Main Building', 'Five floors: Blocks A–E.', 'active');
 
 INSERT INTO blocks (hostel_id, building_id, name, status) VALUES
   (1,1,'A','active'), (1,1,'B','active'), (1,1,'C','active'), (1,1,'D','active'), (1,1,'E','active'),
   (2,2,'A','active'), (2,2,'B','active'), (2,2,'C','active'), (2,2,'D','active'), (2,2,'E','active'),
-  (3,3,'A','active'), (3,3,'B','active'), (3,3,'C','active'), (3,3,'D','active'), (3,3,'E','active'),
-  (4,4,'A','active'), (4,4,'B','active'), (4,4,'C','active'), (4,4,'D','active'), (4,4,'E','active'),
-  (5,5,'A','active'), (5,5,'B','active'), (5,5,'C','active'), (5,5,'D','active'), (5,5,'E','active'),
-  (6,6,'A','active'), (6,6,'B','active'), (6,6,'C','active'), (6,6,'D','active'), (6,6,'E','active');
+  (3,3,'A','active'), (3,3,'B','active'), (3,3,'C','active'), (3,3,'D','active'), (3,3,'E','active');
 
 -- ---------------------------------------------------------------------------
 -- hostel admins (one per hostel) + super admin
 -- Password hashes are generated by the backend seed scripts (bcrypt), not inline:
 --   node backend/scripts/seedAdmin.js
 --   node backend/scripts/seedHostelAdmins.js
--- The scripts create/update the users rows below with hashed passwords.
+--
+-- Super Admin  -> mubarikmehdi@admin.com (role 'admin', hostel_id NULL)
+-- Hostel Admin -> Jinnah Hostel       : yousafmehsood2121@gmail.com
+-- Hostel Admin -> Sama Hostel         : malikabdullahmalikaz@gmail.com
+-- Hostel Admin -> Abdul Qadeer Hostel : bilalsudais74@gmail.com
 -- ---------------------------------------------------------------------------
--- Super Admin  -> abdulsattar1717asm@gmail.com (role 'admin', hostel_id NULL)
--- Hostel Admin -> Jinnah Hostel      : yousafmehsood2121@gmail.com
--- Hostel Admin -> Sama Hostel        : malikabdullahmalikaz@gmail.com
--- Hostel Admin -> Abdul Qadir Hostel : bilalsudais74@gmail.com
--- Hostel Admin -> DHA Phase 5        : admin.dha@mubarakhostels.pk
--- Hostel Admin -> Wapda Town         : admin.wapda@mubarakhostels.pk
--- Hostel Admin -> Bahria Town        : admin.bahria@mubarakhostels.pk
 
 -- ---------------------------------------------------------------------------
--- students
--- ---------------------------------------------------------------------------
-INSERT INTO students
-  (name, father_name, cnic, phone, hostel_id, room, bed, room_type, university, program, guardian_phone, join_date, monthly_fee, status)
-VALUES
-  ('Ahmed Raza',     'Muhammad Raza',   '61101-1234567-1', '0300-1110001', 1, 'A1', 1, '2-Seater Deluxe', 'Arid Agriculture University', 'BSc Computer Science', '0301-2220001', '2025-08-15', 22000, 'Active'),
-  ('Bilal Hussain',  'Ghulam Hussain',  '61101-1234567-2', '0300-1110002', 1, 'A1', 2, '2-Seater Deluxe', 'Bahria University', 'BBA', '0301-2220002', '2025-09-01', 22000, 'Active'),
-  ('Usman Tariq',    'Tariq Mehmood',   '61101-1234567-3', '0300-1110003', 1, 'A2', 1, '3-Seater Comfort', 'Arid Agriculture University', 'BS IT', '0301-2220003', '2025-08-20', 17000, 'Active'),
-  ('Hamza Ali',      'Muhammad Ali',    '61101-1234567-4', '0300-1110004', 1, 'A2', 2, '3-Seater Comfort', 'Bahria University', 'BSc Physics', '0301-2220004', '2025-09-10', 17000, 'Notice'),
-  ('Faisal Khan',    'Akbar Khan',      '61101-1234567-5', '0300-1110005', 2, 'A3', 1, '4-Seater Standard', 'NUST', 'BS Electrical', '0301-2220005', '2025-08-01', 14000, 'Active'),
-  ('Imran Yousaf',   'Yousaf Ali',      '61101-1234567-6', '0300-1110006', 2, 'A3', 2, '4-Seater Standard', 'NUST', 'BS Mechanical', '0301-2220006', '2025-08-05', 14000, 'Active'),
-  ('Shahzaib Ahmed', 'Mukhtar Ahmed',   '61101-1234567-7', '0300-1110007', 2, 'A3', 3, '4-Seater Standard', 'COMSATS', 'BS CS', '0301-2220007', '2025-09-15', 14000, 'Active'),
-  ('Kamran Akmal',   'Akmal Hussain',   '61101-1234567-8', '0300-1110008', 3, 'A4', 1, '5-Seater Economy', 'IIUI', 'BSc Economics', '0301-2220008', '2025-08-12', 11000, 'Active'),
-  ('Noman Ashraf',   'Ashraf Ali',      '61101-1234567-9', '0300-1110009', 3, 'A4', 2, '5-Seater Economy', 'IIUI', 'BS Accounting', '0301-2220009', '2025-08-18', 11000, 'Active'),
-  ('Saad Malik',     'Malik Ashraf',    '61101-1234570-1', '0300-1110010', 3, 'A4', 3, '5-Seater Economy', 'COMSATS', 'BS SE', '0301-2220010', '2025-09-01', 11000, 'Left'),
-  ('Zainab Noor',    'Noor Muhammad',   '61101-1234570-2', '0300-1110011', 4, 'B1', 1, '4-Seater Standard', 'LUMS', 'BSc Economics', '0301-2220011', '2025-08-22', 14000, 'Active'),
-  ('Ayesha Siddiqui','Siddiq Ahmed',    '61101-1234570-3', '0300-1110012', 4, 'B1', 2, '4-Seater Standard', 'LUMS', 'BBA', '0301-2220012', '2025-09-05', 14000, 'Active'),
-  ('Fatima Zahra',   'Zahra Begum',     '61101-1234570-4', '0300-1110013', 4, 'B2', 1, '5-Seater Economy', 'Beaconhouse National University', 'BS Psychology', '0301-2220013', '2025-08-10', 11000, 'Active'),
-  ('Maryam Javed',   'Javed Iqbal',     '61101-1234570-5', '0300-1110014', 5, 'B2', 2, '5-Seater Economy', 'Virtual University', 'BS CS', '0301-2220014', '2025-09-01', 11000, 'Active'),
-  ('Sana Ullah',     'Sana Ullah',      '61101-1234570-6', '0300-1110015', 5, 'B2', 3, '5-Seater Economy', 'University of the Punjab', 'BS English', '0301-2220015', '2025-08-25', 11000, 'Active'),
-  ('Rabia Bashir',   'Bashir Ahmed',    '61101-1234570-7', '0300-1110016', 5, 'B3', 1, '2-Seater Deluxe', 'AIOU', 'BS Sociology', '0301-2220016', '2025-09-12', 22000, 'Active'),
-  ('Hira Shah',      'Shah Jahan',      '61101-1234570-8', '0300-1110017', 6, 'B3', 2, '2-Seater Deluxe', 'University of Lahore', 'BSc Biology', '0301-2220017', '2025-08-08', 22000, 'Active'),
-  ('Kiran Akhtar',   'Akhtar Ali',      '61101-1234570-9', '0300-1110018', 6, 'C1', 1, '2-Seater Deluxe', 'Bahria University', 'BS Finance', '0301-2220018', '2025-09-02', 22000, 'Active');
-
--- ---------------------------------------------------------------------------
--- fees (current and recent months)
--- ---------------------------------------------------------------------------
-INSERT INTO fees (student_id, month, amount, paid, paid_at, method) VALUES
-  (1,  '2026-09', 22000, 1, '2026-09-01', 'Bank Transfer'),
-  (2,  '2026-09', 22000, 1, '2026-09-02', 'Cash'),
-  (3,  '2026-09', 17000, 0, NULL, NULL),
-  (4,  '2026-09', 17000, 0, NULL, NULL),
-  (5,  '2026-09', 22000, 1, '2026-09-03', 'JazzCash'),
-  (6,  '2026-09', 22000, 1, '2026-09-01', 'Bank Transfer'),
-  (7,  '2026-09', 14000, 0, NULL, NULL),
-  (8,  '2026-09', 22000, 1, '2026-09-02', 'Cash'),
-  (9,  '2026-09', 22000, 0, NULL, NULL),
-  (11, '2026-09', 22000, 1, '2026-09-05', 'Bank Transfer'),
-  (12, '2026-09', 22000, 1, '2026-09-04', 'Cash'),
-  (13, '2026-09', 17000, 0, NULL, NULL),
-  (14, '2026-09', 22000, 1, '2026-09-01', 'Bank Transfer'),
-  (15, '2026-09', 22000, 1, '2026-09-02', 'JazzCash'),
-  (16, '2026-09', 14000, 0, NULL, NULL),
-  (17, '2026-09', 22000, 1, '2026-09-03', 'Cash'),
-  (18, '2026-09', 22000, 0, NULL, NULL),
-  (1,  '2026-08', 22000, 1, '2026-08-01', 'Bank Transfer'),
-  (2,  '2026-08', 22000, 1, '2026-08-02', 'Cash'),
-  (5,  '2026-08', 22000, 1, '2026-08-01', 'Bank Transfer'),
-  (6,  '2026-08', 22000, 1, '2026-08-03', 'Cash'),
-  (8,  '2026-08', 22000, 1, '2026-08-02', 'Bank Transfer'),
-  (11, '2026-08', 22000, 1, '2026-08-05', 'Cash');
-
--- ---------------------------------------------------------------------------
--- attendance (recent days)
--- ---------------------------------------------------------------------------
-INSERT INTO attendance (student_id, date, check_in, check_out, status) VALUES
-  (1, '2026-09-08', '08:10', '17:30', 'present'),
-  (2, '2026-09-08', '08:15', '17:45', 'present'),
-  (3, '2026-09-08', '08:20', '17:50', 'present'),
-  (4, '2026-09-08', NULL, NULL, 'absent'),
-  (5, '2026-09-08', '08:05', '17:25', 'present'),
-  (6, '2026-09-08', '08:12', '17:40', 'present'),
-  (7, '2026-09-08', NULL, NULL, 'absent'),
-  (8, '2026-09-08', '08:18', '17:55', 'present'),
-  (9, '2026-09-08', '08:08', '17:35', 'present'),
-  (1, '2026-09-07', '08:11', '17:32', 'present'),
-  (2, '2026-09-07', '08:14', '17:44', 'present'),
-  (3, '2026-09-07', '08:19', '17:49', 'present'),
-  (5, '2026-09-07', '08:06', '17:26', 'present'),
-  (6, '2026-09-07', '08:13', '17:41', 'present'),
-  (8, '2026-09-07', '08:17', '17:53', 'present');
-
--- ---------------------------------------------------------------------------
--- visitors
--- ---------------------------------------------------------------------------
-INSERT INTO visitors (hostel_id, name, cnic, visiting_student, purpose, check_in) VALUES
-  (1, 'Muhammad Raza',   '61101-1234567-1', 'Ahmed Raza',   'Family visit', '2026-09-07 14:30:00'),
-  (2, 'Akbar Khan',      '61101-1234567-5', 'Faisal Khan',  'Fee payment',  '2026-09-07 11:00:00'),
-  (4, 'Siddiq Ahmed',    '61101-1234570-3', 'Ayesha Siddiqui', 'Guardian visit', '2026-09-06 16:45:00'),
-  (6, 'Shah Jahan',      '61101-1234570-8', 'Hira Shah',    'Family visit', '2026-09-06 13:20:00');
-
--- ---------------------------------------------------------------------------
--- rooms (room catalog — 5 blocks × 10 rooms = 50 rooms)
+-- rooms (room catalog — 5 blocks × 10 rooms = 50 rooms per hostel)
 -- ---------------------------------------------------------------------------
 INSERT INTO rooms (label, block, floor, room_type, capacity) VALUES
   ('A1','A',1,'2-Seater Deluxe',2),  ('A2','A',1,'3-Seater Comfort',3),
@@ -206,20 +101,8 @@ INSERT INTO rooms (label, block, floor, room_type, capacity) VALUES
   ('E9','E',5,'2-Seater Deluxe',2),  ('E10','E',5,'3-Seater Comfort',3);
 
 -- ---------------------------------------------------------------------------
--- maintenance (a few beds under maintenance)
--- ---------------------------------------------------------------------------
-INSERT INTO maintenance (hostel_id, room_label, bed) VALUES
-  (1, 'B2', 3),
-  (1, 'C4', 5),
-  (2, 'A3', 4),
-  (3, 'D5', 4),
-  (4, 'E1', 2),
-  (5, 'B8', 3),
-  (6, 'A1', 1);
-
--- ---------------------------------------------------------------------------
 -- hostel_rooms — one set of rooms per hostel from the shared catalog
--- (50 rooms x 6 hostels = 300 rooms)
+-- (50 rooms x 3 hostels = 150 rooms)
 -- ---------------------------------------------------------------------------
 INSERT INTO hostel_rooms (hostel_id, building_id, block_id, room_number, floor, room_type, capacity, status)
 SELECT h.id, b.id, blk.id, r.label, r.floor, r.room_type, r.capacity, 'active'
@@ -229,7 +112,7 @@ JOIN blocks blk ON blk.building_id = b.id
 JOIN rooms r ON r.block = blk.name;
 
 -- ---------------------------------------------------------------------------
--- hostel_beds — every bed inside every hostel room
+-- hostel_beds — every bed inside every hostel room (all empty / available)
 -- ---------------------------------------------------------------------------
 INSERT INTO hostel_beds (room_id, bed_number)
 SELECT hr.id, n.n
@@ -237,43 +120,3 @@ FROM hostel_rooms hr
 JOIN (
   SELECT 1 AS n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
 ) n ON n.n <= hr.capacity;
-
--- ---------------------------------------------------------------------------
--- room_allocations — place the seeded students into their defined rooms/beds
--- ---------------------------------------------------------------------------
-INSERT INTO room_allocations (student_id, room_id, bed_id)
-SELECT s.id, hr.id, hb.id
-FROM students s
-JOIN hostel_rooms hr ON hr.hostel_id = s.hostel_id AND hr.room_number = s.room
-JOIN hostel_beds hb ON hb.room_id = hr.id AND hb.bed_number = s.bed
-WHERE s.status != 'Left' AND s.room != '';
-
--- link allocation to the existing maintenance rows (cross-hostel catalog labels
--- are matched inside each hostel so a maintained bed also shows on the grid)
-UPDATE hostel_beds hb
-JOIN hostel_rooms hr ON hr.id = hb.room_id
-JOIN maintenance m ON m.hostel_id = hr.hostel_id AND m.room_label = hr.room_number AND m.bed = hb.bed_number
-SET hb.is_maintenance = 1;
-
--- ---------------------------------------------------------------------------
--- notices (demo)
--- ---------------------------------------------------------------------------
-INSERT INTO notices (hostel_id, title, body, author_name, is_pinned, expires_at) VALUES
-  (1, 'Monthly mess payment due', 'Please clear your monthly mess payment by the 10th. See the office for a breakdown.', 'Yousaf Mehsood', 1, '2026-12-31'),
-  (2, 'Power maintenance this Sunday', 'Electricians will be working between 10 AM and 2 PM on Sunday. Expect short outages.', 'Abdullah', 0, '2026-10-31'),
-  (4, 'Guest room booking', 'The guest room is available for parents. Book at the front desk at least a day in advance.', 'Arslan Tariq', 1, '2026-12-31');
-
--- ---------------------------------------------------------------------------
--- complaints (demo — hosted via the real complaints API)
--- ---------------------------------------------------------------------------
-INSERT INTO complaints (code, student_id, student_name, student_code, hostel_id, warden_id, room, category, description, priority, status, remarks) VALUES
-  ('CMP-2026-0001', 1, 'Ahmed Raza', '61101-1234567-1', 1, NULL, 'A1', 'Electrical', 'The tube light in my room flickers constantly at night.', 'Normal', 'Pending', NULL),
-  ('CMP-2026-0002', 5, 'Faisal Khan', '61101-1234567-5', 2, NULL, 'A3', 'Plumbing', 'The bathroom tap keeps leaking since yesterday.', 'High', 'In Progress', 'Plumber scheduled for tomorrow morning.'),
-  ('CMP-2026-0003', 11, 'Zainab Noor', '61101-1234570-2', 4, NULL, 'B1', 'Internet', 'Wi-Fi is very slow in the B block rooms.', 'Normal', 'Resolved', 'Router replaced and speed restored.');
-
--- ---------------------------------------------------------------------------
--- audit_logs (demo)
--- ---------------------------------------------------------------------------
-INSERT INTO audit_logs (user_name, user_role, action, resource, resource_id, details) VALUES
-  ('Super Admin', 'admin', 'student.created', 'students', '1', 'Added student Ahmed Raza'),
-  ('Yousaf Mehsood', 'warden', 'complaint.responded', 'complaints', '1', 'Added a response to a complaint');

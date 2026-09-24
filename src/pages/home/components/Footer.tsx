@@ -14,8 +14,8 @@ export default function Footer() {
               className="h-16 w-auto rounded-md bg-background-50/90 px-3 py-1 mb-4"
             />
             <p className="mt-5 text-sm text-background-200 leading-relaxed">
-              Six premium student hostels across Rawalpindi & Lahore. A safe, clean and study-friendly second home
-              for over 900 students.
+              Premium student hostels across Rawalpindi. A safe, clean and study-friendly second home for
+              every student.
             </p>
             <div className="mt-6 flex gap-3">
               {["facebook", "instagram", "youtube", "whatsapp"].map((s) => (
@@ -55,10 +55,7 @@ export default function Footer() {
               {[
                 "Jinnah Hostel",
                 "Sama Hostel",
-                "Abdul Qadir Hostel",
-                "Mubarak Hostel 04 · DHA Phase 5",
-                "Mubarak Hostel 05 · Wapda Town",
-                "Mubarak Hostel 06 · Bahria Town",
+                "Abdul Qadeer Hostel",
               ].map((l) => (
                 <li key={l}>
                   <a href="#hostels" className="hover:text-accent-400 cursor-pointer">

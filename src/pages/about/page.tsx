@@ -25,15 +25,15 @@ const values = [
   {
     icon: "ri-award-line",
     title: "Quality Standards",
-    text: "Consistent cleanliness, maintenance and service standards audited monthly across all six of our hostels.",
+    text: "Consistent cleanliness, maintenance and service standards audited monthly across all of our hostels.",
   },
 ];
 
 const milestones = [
-  { year: "2012", text: "Founded with our first hostel in Gulberg, Lahore, hosting 50 students." },
+  { year: "2012", text: "Founded with our first hostel on 6th Road, Rawalpindi, hosting 50 students." },
   { year: "2015", text: "Expanded to three hostels with dedicated wardens and 24/7 security." },
   { year: "2019", text: "Introduced premium room categories, mess services and fiber Wi-Fi." },
-  { year: "2022", text: "Grew to six hostels, surpassing 900 beds across Lahore." },
+  { year: "2022", text: "Grew to a network of hostels serving hundreds of students across Rawalpindi." },
   { year: "2026", text: "Launched our digital platform with online admissions and management." },
 ];
 
@@ -82,8 +82,8 @@ export default function About() {
             <p className="mt-6 text-foreground-700 leading-relaxed">
               Mubarak Group of Hostels began in 2012 with a simple belief: that students deserve
               accommodation that treats them with dignity, security and care. What started as a
-              single 50-bed hostel in Gulberg has grown into a network of six hostels serving over
-              900 students from universities across Pakistan.
+              single 50-bed hostel on 6th Road, Rawalpindi has grown into a network of hostels
+              serving students from universities across Pakistan.
             </p>
             <p className="mt-4 text-foreground-700 leading-relaxed">
               Our management philosophy is rooted in discipline and respect — for the student, for
@@ -133,6 +133,7 @@ export default function About() {
               {ceo.name}
             </h2>
             <div className="text-foreground-600 font-semibold mt-1">{ceo.title}</div>
+            <div className="text-foreground-500 text-sm mt-1">{ceo.designation}</div>
             <p className="mt-6 text-foreground-700 leading-relaxed">{ceo.intro}</p>
             <blockquote className="mt-6 text-foreground-600 italic border-l-2 border-accent-500 pl-4">
               "{ceo.quote}"

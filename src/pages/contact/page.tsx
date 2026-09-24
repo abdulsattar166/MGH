@@ -304,7 +304,7 @@ export default function Contact() {
               Reach a Specific Hostel
             </span>
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground-950 mt-3">
-              Contact any of our six hostels directly
+              Contact any of our hostels directly
             </h2>
             <p className="mt-3 text-foreground-600">
               Each hostel has its own warden and contact line. Choose the one closest to your

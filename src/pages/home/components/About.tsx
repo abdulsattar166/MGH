@@ -38,9 +38,9 @@ export default function About() {
           <p className="mt-6 text-foreground-700 leading-relaxed">
             For over a decade, Mubarak Group of Hostels has been redefining what student living should
             feel like — clean rooms, fresh food, a strong sense of community and around-the-clock
-            security. Across our six hostels in Lahore, we host hundreds of students from universities
-            all over Pakistan, giving them the peace of mind to focus on what really matters: their
-            studies and their future.
+            security. Across our hostels in Rawalpindi, we host students from universities all over
+            Pakistan, giving them the peace of mind to focus on what really matters: their studies
+            and their future.
           </p>
 
           <div className="mt-8 grid sm:grid-cols-2 gap-5">
@@ -48,7 +48,7 @@ export default function About() {
               { icon: "ri-shield-check-line", title: "Our Mission", text: "Provide safe, affordable and dignified accommodation for every student." },
               { icon: "ri-eye-line", title: "Our Vision", text: "Be Pakistan's most trusted student-living brand — a true second home." },
               { icon: "ri-community-line", title: "Community", text: "A respectful, disciplined and study-friendly environment for all residents." },
-              { icon: "ri-award-line", title: "Standards", text: "Consistent quality across all six branches, audited every single month." },
+              { icon: "ri-award-line", title: "Standards", text: "Consistent quality across all branches, audited every single month." },
             ].map((v) => (
               <div key={v.title} className="flex gap-4">
                 <div className="w-11 h-11 rounded-md bg-primary-50 flex items-center justify-center shrink-0">
@@ -78,6 +78,7 @@ export default function About() {
               {ceo.name}
             </h3>
             <div className="text-sm font-semibold text-foreground-600 mt-1">{ceo.title}</div>
+            <div className="text-sm text-foreground-500 mt-1 max-w-2xl">{ceo.designation}</div>
             <p className="mt-4 text-foreground-700 leading-relaxed max-w-2xl">{ceo.intro}</p>
             <blockquote className="mt-5 text-foreground-600 italic border-l-2 border-accent-500 pl-4 max-w-2xl">
               "{ceo.quote}"

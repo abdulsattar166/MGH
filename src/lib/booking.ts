@@ -216,24 +216,10 @@ export const emptyApplicant: Applicant = {
   occupation: "",
 };
 
-// --- deterministic seed residents (stable across reloads, ~55% occupied) ---
-function seedOccupied(hostelId: number, label: string, bedNumber: number): boolean {
-  const str = `${hostelId}-${label}-${bedNumber}`;
-  let h = 0;
-  for (let i = 0; i < str.length; i++) {
-    h = (h * 31 + str.charCodeAt(i)) >>> 0;
-  }
-  return h % 100 < 55;
-}
-
-function seedResidents(hostelId: number): ResidentOccupancy[] {
-  const residents: ResidentOccupancy[] = [];
-  for (const c of buildRoomCatalog()) {
-    for (let b = 1; b <= c.capacity; b++) {
-      if (seedOccupied(hostelId, c.label, b)) residents.push({ room: c.label, bed: b });
-    }
-  }
-  return residents;
+// No fabricated residents: rooms start empty and fully available for booking.
+// Real occupancy always comes from live allocations (DB / API).
+function seedResidents(_hostelId: number): ResidentOccupancy[] {
+  return [];
 }
 
 function readJSON<T>(key: string, fallback: T): T {

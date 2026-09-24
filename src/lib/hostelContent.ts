@@ -1,11 +1,11 @@
 // ---------------------------------------------------------------------------
 // Per-hostel page content.
 //
-// The original six hostels have hand-written descriptions, security/food/wifi
-// copy, galleries and location blocks in the mock data. Any hostel added from
-// the dashboard only has the DB fields, so these helpers merge the mock
-// content when it exists and fall back to sensible defaults otherwise. That
-// keeps every hostel page rendering for both seed and newly added hostels.
+// The seed hostels have hand-written descriptions, security/food/wifi copy,
+// galleries and location blocks in the mock data. Any hostel added from the
+// dashboard only has the DB fields, so these helpers merge the mock content
+// when it exists and fall back to sensible defaults otherwise. That keeps
+// every hostel page rendering for both seed and newly added hostels.
 // ---------------------------------------------------------------------------
 
 import { hostelDetails, hostelLocations } from "@/mocks/hostels";

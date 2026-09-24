@@ -33,7 +33,7 @@ export const faqs = [
   },
   {
     q: "Can I visit the hostel before applying?",
-    a: "Yes, walk-in visits are welcome every day from 9:00 AM to 9:00 PM. You can also message us on WhatsApp to arrange a tour of any of our six hostels.",
+    a: "Yes, walk-in visits are welcome every day from 9:00 AM to 9:00 PM. You can also message us on WhatsApp to arrange a tour of any of our hostels.",
   },
   {
     q: "Can I transfer to a different room or hostel?",

@@ -4,7 +4,7 @@
 // A hostel can have its own photo uploaded by the admin (stored in
 // `hostels.image_url`). When no photo has been set yet we fall back to a
 // deterministic default so the public pages always show a picture —
-// seed hostels (ids 1–6) use their original mock images, any newly added
+// seed hostels (ids 1–3) use their original images, any newly added
 // hostel uses a generic building photo.
 // ---------------------------------------------------------------------------
 

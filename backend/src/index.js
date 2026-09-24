@@ -31,7 +31,23 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+// CORS: reflect any incoming origin so the deployed frontend (Vercel) always
+// passes the preflight check. If CORS_ORIGIN is set to a specific host we
+// honour it; otherwise every origin is allowed.
+app.use(
+  cors({
+    origin(origin, cb) {
+      const allowed = process.env.CORS_ORIGIN;
+      if (!allowed || allowed === "*" || !origin) return cb(null, true);
+      if (allowed === origin) return cb(null, true);
+      return cb(null, allowed.split(",").map((s) => s.trim()).includes(origin));
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    credentials: false,
+    optionsSuccessStatus: 204,
+  })
+);
 app.use(express.json({ limit: "8mb" }));
 
 // Uploaded images (multer) — served statically for <img> tags.

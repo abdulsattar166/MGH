@@ -32,7 +32,10 @@ whole project can run against **your own MySQL server**.
    npm run seed-admin
    ```
 
-   Default admin: `mubarikmehdi@admin.com` / `admin@12345`
+   Default super admins:
+   - `abdulsattar1717asm@gmail.com` / `Admin@12345`
+   - `mubarakmehdi@admin.com` / `mubarakhostels@12345`
+
    (You can edit `scripts/seedAdmin.js` before running if you want different
    credentials.)
 

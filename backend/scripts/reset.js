@@ -23,12 +23,20 @@ const HOSTEL_NAMES = {
   3: "Abdul Qadeer Hostel",
 };
 
-const SUPER_ADMIN = {
-  name: "Mubarak Mehdi",
-  email: "mubarikmehdi@admin.com",
-  password: "admin@12345",
-  position: "Founder & CEO",
-};
+const SUPER_ADMINS = [
+  {
+    name: "Abdul Sattar",
+    email: "abdulsattar1717asm@gmail.com",
+    password: "Admin@12345",
+    position: "Super Admin",
+  },
+  {
+    name: "Mubarak Mehdi",
+    email: "mubarakmehdi@admin.com",
+    password: "mubarakhostels@12345",
+    position: "Founder & CEO",
+  },
+];
 
 const WARDENS = [
   {
@@ -58,7 +66,7 @@ const WARDENS = [
 ];
 
 const KEEP_EMAILS = new Set([
-  SUPER_ADMIN.email,
+  ...SUPER_ADMINS.map((a) => a.email),
   ...WARDENS.map((w) => w.email),
 ]);
 
@@ -179,8 +187,10 @@ async function main() {
       );
     };
 
-    await upsertUser(SUPER_ADMIN, "admin");
-    console.log(`  super admin ready: ${SUPER_ADMIN.email}`);
+    for (const admin of SUPER_ADMINS) {
+      await upsertUser(admin, "admin");
+      console.log(`  super admin ready: ${admin.email}`);
+    }
     for (const w of WARDENS) {
       await upsertUser(w, "warden");
       console.log(`  warden ready: ${w.email} (hostel ${w.hostelId})`);

@@ -1,8 +1,19 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const SUPER_ADMIN_EMAIL = "mubarikmehdi@admin.com";
-const SUPER_ADMIN_PASSWORD = "admin@12345";
-const SUPER_ADMIN_NAME = "Mubarak Mehdi";
+const SUPER_ADMINS = [
+  {
+    email: "abdulsattar1717asm@gmail.com",
+    password: "Admin@12345",
+    name: "Abdul Sattar",
+    position: "Super Admin",
+  },
+  {
+    email: "mubarakmehdi@admin.com",
+    password: "mubarakhostels@12345",
+    name: "Mubarak Mehdi",
+    position: "Founder & CEO",
+  },
+];
 
 Deno.serve(async (req) => {
   const json = (body: unknown) =>
@@ -37,38 +48,50 @@ Deno.serve(async (req) => {
     return json({ error: "Only the super admin can perform this action." });
   }
 
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("email", SUPER_ADMIN_EMAIL)
-    .maybeSingle();
+  const results: string[] = [];
 
-  if (profile) {
-    const { error: updErr } = await admin.auth.admin.updateUserById(profile.id, {
-      password: SUPER_ADMIN_PASSWORD,
-      email_confirm: true,
-    });
-    if (updErr) return json({ error: updErr.message });
-
-    await admin.from("profiles").update({ role: "admin" }).eq("id", profile.id);
-    return json({ ok: true, action: "updated" });
-  }
-
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email: SUPER_ADMIN_EMAIL,
-    password: SUPER_ADMIN_PASSWORD,
-    email_confirm: true,
-    user_metadata: { name: SUPER_ADMIN_NAME },
-  });
-  if (createErr) return json({ error: createErr.message });
-
-  const id = created?.user?.id;
-  if (id) {
-    await admin
+  for (const superAdmin of SUPER_ADMINS) {
+    const { data: profile } = await admin
       .from("profiles")
-      .update({ role: "admin", email: SUPER_ADMIN_EMAIL, name: SUPER_ADMIN_NAME })
-      .eq("id", id);
+      .select("id")
+      .eq("email", superAdmin.email)
+      .maybeSingle();
+
+    if (profile) {
+      const { error: updErr } = await admin.auth.admin.updateUserById(profile.id, {
+        password: superAdmin.password,
+        email_confirm: true,
+      });
+      if (updErr) return json({ error: updErr.message });
+
+      await admin
+        .from("profiles")
+        .update({ role: "admin", name: superAdmin.name, position: superAdmin.position })
+        .eq("id", profile.id);
+      results.push(`updated:${superAdmin.email}`);
+      continue;
+    }
+
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email: superAdmin.email,
+      password: superAdmin.password,
+      email_confirm: true,
+      user_metadata: { name: superAdmin.name },
+    });
+    if (createErr) return json({ error: createErr.message });
+
+    const id = created?.user?.id;
+    if (id) {
+      await admin.from("profiles").upsert({
+        id,
+        role: "admin",
+        email: superAdmin.email,
+        name: superAdmin.name,
+        position: superAdmin.position,
+      });
+    }
+    results.push(`created:${superAdmin.email}`);
   }
 
-  return json({ ok: true, action: "created" });
+  return json({ ok: true, results });
 });

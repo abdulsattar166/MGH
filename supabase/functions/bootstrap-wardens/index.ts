@@ -1,12 +1,21 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const SUPER_ADMIN = {
-  name: "Mubarak Mehdi",
-  email: "mubarikmehdi@admin.com",
-  password: "admin@12345",
-  role: "admin",
-  position: "Founder & CEO",
-};
+const SUPER_ADMINS = [
+  {
+    name: "Abdul Sattar",
+    email: "abdulsattar1717asm@gmail.com",
+    password: "Admin@12345",
+    role: "admin",
+    position: "Super Admin",
+  },
+  {
+    name: "Mubarak Mehdi",
+    email: "mubarakmehdi@admin.com",
+    password: "mubarakhostels@12345",
+    role: "admin",
+    position: "Founder & CEO",
+  },
+];
 
 const SUPERINTENDENT = {
   name: "Hostel Superintendent",
@@ -117,7 +126,9 @@ Deno.serve(async (_req) => {
   }
 
   try {
-    results.push("OK: " + (await ensureUser(SUPER_ADMIN)));
+    for (const admin of SUPER_ADMINS) {
+      results.push("OK: " + (await ensureUser(admin)));
+    }
     results.push("OK: " + (await ensureUser(SUPERINTENDENT)));
     for (const w of HOSTEL_ADMINS) {
       results.push("OK: " + (await ensureUser({ ...w, role: "warden" })));

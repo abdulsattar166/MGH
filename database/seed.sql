@@ -64,7 +64,8 @@ INSERT INTO blocks (hostel_id, building_id, name, status) VALUES
 --   node backend/scripts/seedAdmin.js
 --   node backend/scripts/seedHostelAdmins.js
 --
--- Super Admin  -> mubarikmehdi@admin.com (role 'admin', hostel_id NULL)
+-- Super Admins -> abdulsattar1717asm@gmail.com  (role 'admin', hostel_id NULL)
+--                 mubarakmehdi@admin.com        (role 'admin', hostel_id NULL)
 -- Hostel Admin -> Jinnah Hostel       : yousafmehsood2121@gmail.com
 -- Hostel Admin -> Sama Hostel         : malikabdullahmalikaz@gmail.com
 -- Hostel Admin -> Abdul Qadeer Hostel : bilalsudais74@gmail.com

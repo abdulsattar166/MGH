@@ -4,23 +4,38 @@ import { pool } from "../src/db.js";
 
 dotenv.config();
 
-// Default admin account. Change these to your own before running, or update
+// Super admin accounts. Change these to your own before running, or update
 // them later via the admin panel.
-const ADMIN = {
-  name: "Mubarak Mehdi",
-  email: "mubarikmehdi@admin.com",
-  password: "admin@12345",
-};
+const ADMINS = [
+  {
+    name: "Abdul Sattar",
+    email: "abdulsattar1717asm@gmail.com",
+    password: "Admin@12345",
+    position: "Super Admin",
+  },
+  {
+    name: "Mubarak Mehdi",
+    email: "mubarakmehdi@admin.com",
+    password: "mubarakhostels@12345",
+    position: "Founder & CEO",
+  },
+];
 
 async function main() {
-  const hash = bcrypt.hashSync(ADMIN.password, 10);
-  await pool.query(
-    `INSERT INTO users (name, email, password_hash, role, hostel_id)
-     VALUES (?, ?, ?, 'admin', NULL)
-     ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), role = VALUES(role)`,
-    [ADMIN.name, ADMIN.email, hash]
-  );
-  console.log(`Admin account ready: ${ADMIN.email}`);
+  for (const admin of ADMINS) {
+    const hash = bcrypt.hashSync(admin.password, 10);
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role, hostel_id, position)
+       VALUES (?, ?, ?, 'admin', NULL, ?)
+       ON DUPLICATE KEY UPDATE
+         name = VALUES(name),
+         password_hash = VALUES(password_hash),
+         role = VALUES(role),
+         position = VALUES(position)`,
+      [admin.name, admin.email, hash, admin.position]
+    );
+    console.log(`Admin account ready: ${admin.email}`);
+  }
   await pool.end();
 }
 

@@ -3,6 +3,9 @@ import './i18n'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { startApiAutoDetect } from './lib/api'
+
+startApiAutoDetect()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

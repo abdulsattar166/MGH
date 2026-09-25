@@ -46,6 +46,7 @@ const WARDENS = [
     phone: "03419715017",
     hostelId: 1,
     position: "Warden, Jinnah Boys House",
+    avatarUrl: "https://static.readdy.ai/image/773d73dcd4bfe3b3ab546a821d990052/8f6a18793fdfdc4a44c7458f6edc225e.png",
   },
   {
     name: "Abdullah",
@@ -54,6 +55,7 @@ const WARDENS = [
     phone: "03105948138",
     hostelId: 2,
     position: "Warden, Sama Boys House",
+    avatarUrl: "https://static.readdy.ai/image/773d73dcd4bfe3b3ab546a821d990052/975047ec2596c0f071aabe1219285608.png",
   },
   {
     name: "Bilah Ahmed",
@@ -62,6 +64,7 @@ const WARDENS = [
     phone: "03045889984",
     hostelId: 3,
     position: "Warden, Abdul Qadeer Boys House",
+    avatarUrl: "https://static.readdy.ai/image/773d73dcd4bfe3b3ab546a821d990052/ac895ff6c5b9f7bc513e57b688cb7400.jpeg",
   },
 ];
 
@@ -173,8 +176,8 @@ async function main() {
     const upsertUser = async (u, role) => {
       const hash = bcrypt.hashSync(u.password, 10);
       await conn.query(
-        `INSERT INTO users (name, email, password_hash, role, hostel_id, phone, position, is_active)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        `INSERT INTO users (name, email, password_hash, role, hostel_id, phone, position, avatar_url, is_active)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
          ON DUPLICATE KEY UPDATE
            name = VALUES(name),
            password_hash = VALUES(password_hash),
@@ -182,8 +185,18 @@ async function main() {
            hostel_id = VALUES(hostel_id),
            phone = VALUES(phone),
            position = VALUES(position),
+           avatar_url = VALUES(avatar_url),
            is_active = 1`,
-        [u.name, u.email, hash, role, u.hostelId ?? null, u.phone ?? null, u.position ?? null]
+        [
+          u.name,
+          u.email,
+          hash,
+          role,
+          u.hostelId ?? null,
+          u.phone ?? null,
+          u.position ?? null,
+          u.avatarUrl ?? null,
+        ]
       );
     };
 

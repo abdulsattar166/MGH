@@ -1,18 +1,30 @@
 import { Router } from "express";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import { requireAuth } from "../middleware/auth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const UPLOADS_DIR = path.resolve(__dirname, "../../uploads");
-if (!fs.existsSync(UPLOADS_DIR)) {
+
+// On serverless hosts the bundle directory is read-only, so uploads go to the
+// writable temp directory instead. Directory creation can never throw at
+// import time (that used to crash the whole API on Vercel).
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
+export const UPLOADS_DIR = isServerless
+  ? path.join(os.tmpdir(), "mubarak-uploads")
+  : path.resolve(__dirname, "../../uploads");
+
+try {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+} catch {
+  /* read-only filesystem — uploads are simply unavailable in this runtime */
 }
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_BYTES = 5 * 1024 * 1024;
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),

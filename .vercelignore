@@ -1,0 +1,9 @@
+out
+dist
+.git
+.env
+.env.local
+backend/node_modules
+backend/uploads
+backend/.env
+**/*.log
